@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilter(2, name); //簡易
         applyFilter(3, name); //外部
         applyFilter(4, name); //歌ってみた
-        a(99, name); //存在しない
+        applyFilter(99, name); //存在しない
     }
     if (title.includes("【YouTube動画一覧】") && keyword) {
         applyFilter(0, keyword);
