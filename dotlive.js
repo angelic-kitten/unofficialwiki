@@ -160,9 +160,7 @@ function regReplace() {
     let after = textArea[8].value.replace(new RegExp(pattern,'g'),convert);
     textArea[11].value = after;
 }
-</script>
 
-<script>
 ////
 // ストライプ表示機能 stripe"
 ////
