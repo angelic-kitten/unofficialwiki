@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 //ホロライブ
-    if (location.href.startsWith("https://seesaawiki.jp/hololive/")) {
+    if (location.href.startsWith("https://seesaawiki.jp/hololivetv/")) {
         if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
             const name = RegExp.$1;
             applyFilter(2, name); //簡易
