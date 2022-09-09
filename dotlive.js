@@ -90,9 +90,7 @@ function createFilterSearch() {
     if (!qry) return;
     link.setAttribute('href', url + "?keyword=" + encodeURIComponent(qry.value) + "&order=" + j);
 }
--->
-</script>
-<script>
+
 //自動実行
 const title = document.title;
 //歌唱楽曲リスト
