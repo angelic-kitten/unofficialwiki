@@ -1,0 +1,23 @@
+/* 枠無しテーブル用 */
+div.user-area table.noborder th,
+div.user-area table.noborder td {
+  border: none;
+}
+
+/* スクロールバー付テーブル生成 */
+.x-scroller {
+  overflow-x: auto;
+}
+.y-scroller {
+  max-height:300px;
+  overflow-y: auto;
+}
+
+/* テーブル交互色替え */
+div.user-area table td {
+  background: unset;
+}
+
+div.user-area table.stripe tbody tr.odd {
+  background-color: #f1f1f1;
+}
