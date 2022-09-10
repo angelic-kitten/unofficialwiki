@@ -367,12 +367,14 @@ function setupAutoFilter() {
         return params;
     }
 
-    function applyFilter(idx, keyword) {
-        const table = $("table.filter").eq(idx);
-        const input = $(`#table-filter-${idx}`);
-        if (!input) return;
-        table.addClass("regex");
-        input.val(keyword).change();
+    function applyFilter(indice, keyword) {
+        for (const idx of String(indice).split(",")) {
+            const table = $("table.filter").eq(idx);
+            const input = $(`#table-filter-${idx}`);
+            if (!input) return;
+            table.addClass("regex");
+            input.val(keyword).change();
+        }
     }
 
 } // setupSongListAutoFilter
