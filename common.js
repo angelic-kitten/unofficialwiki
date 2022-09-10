@@ -152,7 +152,7 @@ function convertSongList() {
         if (songs[i].length > 0) {
         songList = songList + "\n" + "|" + name + "|[[" + date.replace(/\//g, ".") + "生"
                     + ">#" + roman + date.replace(/\//g, "") + "]]" + "-" + String(i+1).padStart(3,"0") + "|"
-                    + "[[" + songs[i] + ">>" + URL + "&t=||";
+                    + "[[" + songs[i] + ">>" + URL + "&t=]]||";
         num = num + 1;
         }
     }
