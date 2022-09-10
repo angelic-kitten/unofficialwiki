@@ -758,6 +758,8 @@ function setupSyntaxChecker() {
     function initSyntaxChecker() {
         const style = `
           ul#syntax-info {
+            max-height: 120px;
+            overflow-y: scroll;
             background-color: white;
             border: #b2b2b2 solid 1px;
             border-top: none;
