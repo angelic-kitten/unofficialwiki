@@ -181,7 +181,7 @@ $(document).ready(function() {
 
   });
 
-//正規表現・大小区別に応じたマッチング関数を生成するやつ
+  //正規表現・大小区別に応じたマッチング関数を生成するやつ
   const gen_tester = (pattern, ignore, regex)=>{
     if (regex) {
       try {
@@ -200,32 +200,31 @@ $(document).ready(function() {
     }
   };
 
-//正規表現対応のフィルター適用処理
-  $("input[id^='table-filter-']").on("apply", (()=>{
-    let prev = null;
-    return function(){
-      const pattern = $(this).val();
-      if (prev == pattern) return;
-      prev = pattern;
+  //正規表現対応のフィルター適用処理
+  $("input[id^='table-filter-']").on("apply", function(){
+    const pattern = $(this).val();
+    const prev = $(this).data("prev");
+    if (prev == pattern) return;
+    $(this).data("prev", pattern);
 
-      const table = $(this).data("target");
+    const table = $(this).data("target");
 
-      // 設定に応じたマッチング関数を用意
-      const is_regex = table.hasClass("regex");
-      const ignore_case = true; // 一律で大小区別なし
-      const test = gen_tester(pattern, ignore_case, is_regex);
-      if (test == null) return;
+    // 設定に応じたマッチング関数を用意
+    const is_regex = table.hasClass("regex");
+    const ignore_case = true; // 一律で大小区別なし
+    const test = gen_tester(pattern, ignore_case, is_regex);
+    if (test == null) return;
 
-      // フィルター適用
-      const rows = table.find("> tbody > tr");
-      rows.each((i,row)=>{
-        $(row).toggle(test($(row).text()));
-      });
+    // フィルター適用
+    const rows = table.find("> tbody > tr");
+    rows.each((i,row)=>{
+      $(row).toggle(test($(row).text()));
+    });
 
-      // ストライプ更新など
-      table.trigger("change");
-    };
-  })());
+    // ストライプ更新など
+    table.trigger("change");
+  });
+
 });
 
 ////
