@@ -425,9 +425,11 @@ function setupEditingTools() {
         const tool_content = this;
         tool_content.addClassName("tool-options");
 
-        addCheckbox("syntax_check", "文法チェックを有効化", false, function(e) {
-            //
-        });
+        addCheckbox("syntax_check", "文法チェックを有効化", false);
+        addCheckbox("syntax_check.folding", "文法チェック：折りたたみの整合性チェック", true);
+        addCheckbox("syntax_check.box", "文法チェック：BOX記法の整合性チェック", true);
+        addCheckbox("syntax_check.table", "文法チェック：テーブルの整合性チェック", true);
+        addCheckbox("syntax_check.anchor", "文法チェック：アンカーの重複チェック", true);
 
         function addCheckbox(name, label, default_, onchanged) {
             const el_label = document.createElement("label");
@@ -442,7 +444,9 @@ function setupEditingTools() {
             checkbox.addEventListener("change", function(e) {
                 localStorage.setItem(`tool.${name}.enabled`, this.checked.toString());
                 window.dispatchEvent(new Event("option-changed"));
-                onchanged.call(this, e);
+                if (onchanged) {
+                    onchanged.call(this, e);
+                }
             });
 
             tool_content.appendChild(el_label);
@@ -743,20 +747,13 @@ function setupEditingTools() {
 
 function setupSyntaxChecker() {
 
-    let enabled = !!JSON.parse(localStorage.getItem("tool.syntax_check.enabled") || "false");
     const edit_box = document.querySelector("textarea#content");
     const info = document.createElement("ul");
+    const options = {};
 
     initSyntaxChecker();
 
-    window.addEventListener("option-changed", function(e) {
-        const val = !!JSON.parse(localStorage.getItem("tool.syntax_check.enabled") || "false");
-        if (enabled !== val) {
-            enabled = val;
-            console.log("syntax check: " + (enabled ? "on" : "off"));
-            checkSyntaxAndDisplay();
-        }
-    });
+    window.addEventListener("option-changed", reloadSettings);
 
     function initSyntaxChecker() {
         const style = `
@@ -769,10 +766,19 @@ function setupSyntaxChecker() {
             list-style-position: inside;
           }
           ul#syntax-info > li {
-            background-color: #fdd;
+            background-color: #eee;
             padding: 2px;
             margin: 0;
             margin-bottom: 4px;
+          }
+          ul#syntax-info > li.level-info {
+            background-color: #eef;
+          }
+          ul#syntax-info > li.level-warning {
+            background-color: #ffc;
+          }
+          ul#syntax-info > li.level-error {
+            background-color: #fdd;
           }
         `;
         const el_style = document.createElement("style");
@@ -787,10 +793,13 @@ function setupSyntaxChecker() {
         edit_outer.appendChild(info);
 
         setupObserver(checkSyntaxAndDisplay);
+        reloadSettings();
         checkSyntaxAndDisplay();
 
         wiki_form.addEventListener("submit", function(e) {
-            if (enabled && info.firstChild) {
+            if (!options.enabled) return;
+            const has_error = Array.prototype.findIndex.call(info.childNodes, (e)=>e.hasClassName("level-error")) >= 0;
+            if (has_error) {
                 const r = confirm("文法エラーがあります。そのまま保存しますか？");
                 if (!r) {
                     e.preventDefault();
@@ -822,15 +831,34 @@ function setupSyntaxChecker() {
         });
     }
 
+    function reloadSettings() {
+        let changed = false;
+        function load(name, item_name, default_) {
+            const val = !!JSON.parse(localStorage.getItem(item_name) || String(default_));
+            if (val !== options[name]) {
+                changed = true;
+            }
+            options[name] = val;
+        }
+        load("enabled", "tool.syntax_check.enabled", false);
+        load("box", "tool.syntax_check.box.enabled", true);
+        load("table", "tool.syntax_check.table.enabled", true);
+        load("folding", "tool.syntax_check.folding.enabled", true);
+        load("anchor", "tool.syntax_check.anchor.enabled", true);
+        if (changed) {
+            checkSyntaxAndDisplay();
+        }
+    }
+
     function checkSyntaxAndDisplay() {
         clearLines();
-        if (!enabled) return;
+        if (!options.enabled) return;
 
         const errors = [];
-        checkSyntax(edit_box.value, (msg,line)=>errors.push([msg,line]));
-        errors.sort((a,b)=>a[1].start-b[1].start);
-        for (const [msg,line] of errors) {
-            addLine(msg, line);
+        checkSyntax(edit_box.value, (msg, line, level)=>errors.push([msg, line, level]));
+        errors.sort((a, b)=>a[1].start-b[1].start);
+        for (const [msg, line, level] of errors) {
+            addLine(msg, line, level);
         }
     }
 
@@ -895,106 +923,146 @@ function setupSyntaxChecker() {
                 line.type = "fold-end";
             } else if (text.startsWith("#include")) {
                 line.type = "include";
+            } else if (text.startsWith("*")) {
+                line.type = "heading";
+            }
+            if (!state.incode && !text.startsWith("//")) {
+                line.anchors = text.match(/(?<=&aname\()[^\)]*(?=\))/g);
             }
         }
 
         // BOX記法
-        for (let line = lines[0]; line; line = line.next) {
-            if (line.type == "box-end-bad") {
-                cb("対応するBOX開始タグがありません。", line);
+        if (options.box) {
+            for (let line = lines[0]; line; line = line.next) {
+                if (line.type == "box-end-bad") {
+                    cb("対応するBOX開始タグがありません。", line, "error");
+                }
             }
-        }
-        const lastline = lines[lines.length-1];
-        if (lastline.type == "box-start" || lastline.type == "box-content") {
-            let line = lastline;
-            while (line.type != "box-start") {
-                line = line.prev;
+            const lastline = lines[lines.length-1];
+            if (lastline.type == "box-start" || lastline.type == "box-content") {
+                let line = lastline;
+                while (line.type != "box-start") {
+                    line = line.prev;
+                }
+                cb("対応するBOX終了タグがありません。", line, "error");
             }
-            cb("対応するBOX終了タグがありません。", line);
         }
 
         // 折りたたみ記法
-        state.fold_level = 0;
-        state.folds = [];
-        for (let line = lines[0]; line; line = line.next) {
-            if (line.type == "fold-start") {
-                state.fold_level++;
-                state.folds.push(line);
-            } else if (line.type == "fold-end") {
-                if (state.fold_level > 0) {
-                    state.fold_level--;
-                    state.folds.pop();
-                } else {
-                    cb("対応する折りたたみ開始タグがありません。", line);
+        if (options.folding) {
+            state.fold_level = 0;
+            state.folds = [];
+            for (let line = lines[0]; line; line = line.next) {
+                if (line.type == "fold-start") {
+                    state.fold_level++;
+                    state.folds.push(line);
+                } else if (line.type == "fold-end") {
+                    if (state.fold_level > 0) {
+                        state.fold_level--;
+                        state.folds.pop();
+                    } else {
+                        cb("対応する折りたたみ開始タグがありません。", line, "error");
+                    }
                 }
             }
-        }
-        for (const line of state.folds) {
-            cb("対応する折りたたみ終了タグがありません。", line);
+            for (const line of state.folds) {
+                cb("対応する折りたたみ終了タグがありません。", line, "error");
+            }
         }
 
         // テーブル
-        state.intable = false;
-        state.table_has_start = false;
-        state.table_end = false;
-        for (let line = lines[0]; line; line = line.next) {
-            if (state.intable) {
-                if (line.type == "table-start") {
-                    state.table_has_start = true;
-                    if (line.prev.type == "table-start") {
-                        cb("無効なテーブル開始タグです。指定は無視されます。", line);
+        if (options.table) {
+            state.intable = false;
+            state.table_has_start = false;
+            state.table_end = false;
+            for (let line = lines[0]; line; line = line.next) {
+                if (state.intable) {
+                    if (line.type == "table-start") {
+                        state.table_has_start = true;
+                        if (line.prev.type == "table-start") {
+                            cb("無効なテーブル開始タグです。指定は無視されます。", line, "warning");
+                        } else {
+                            cb("空行がありません。指定は無視され、テーブルは連結されます。", line, "error");
+                        }
+                    } else if (line.type == "table-content") {
+                        if (state.table_end) {
+                            cb("空行がありません。テーブルは連結されます。", line, "error");
+                        } else {
+                            // valid
+                        }
+                    } else if (line.type == "comment" && line.text.startsWith("//|")) {
+                        line.table_error = true;
+                        if (!line.prev.table_error) {
+                            let splitted = false;
+                            for (let next = line.next; next; next = next.next) {
+                                if (next.type == "comment") continue;
+                                if (next.type == "table-content") {
+                                    splitted = true;
+                                }
+                                break;
+                            }
+                            if (splitted) {
+                                cb("テーブル行がコメントアウトされています。テーブルは分断されます。", line, "error");
+                            } else {
+                                cb("テーブル行がコメントアウトされています。", line, "warning");
+                            }
+                        }
+                    } else if (line.type == "table-end") {
+                        if (state.table_has_start) {
+                            if (state.table_end) {
+                                cb("無効なテーブル終了タグです。", line, "warning");
+                            } else {
+                                state.table_end = true;
+                            }
+                        } else {
+                            cb("無効なテーブル終了タグです。", line, "warning");
+                        }
                     } else {
-                        cb("空行がありません。指定は無視され、テーブルは連結されます。", line);
+                        if (state.table_has_start && !state.table_end) {
+                            state.intable = false;
+                            cb("テーブル終了タグがありません。", line.prev, "warning");
+                        } else {
+                            state.intable = false;
+                        }
                     }
-                } else if (line.type == "table-content") {
-                    if (state.table_end) {
-                        cb("空行がありません。テーブルは連結されます。", line);
+                } else {
+                    if (line.type == "table-start") {
+                        state.intable = true;
+                        state.table_has_start = true;
+                        state.table_end = false;
+                    } else if (line.type == "table-content") {
+                        state.intable = true;
+                        state.table_has_start = false;
+                        state.table_end = false;
+                    } else if (line.type == "table-end") {
+                        cb("無効なテーブル終了タグです。", line, "warning");
                     } else {
                         // valid
                     }
-                } else if (line.type == "comment" && line.text.startsWith("//|")) {
-                    line.table_error = true;
-                    if (!line.prev.table_error) {
-                        cb("テーブル行がコメントアウトされています。テーブルは分断されます。", line);
-                    }
-                } else if (line.type == "table-end") {
-                    if (state.table_has_start) {
-                        if (state.table_end) {
-                            cb("無効なテーブル終了タグです。", line);
-                        } else {
-                            state.table_end = true;
-                        }
-                    } else {
-                        cb("無効なテーブル終了タグです。", line);
-                    }
-                } else {
-                    if (state.table_has_start && !state.table_end) {
-                        state.intable = false;
-                        cb("テーブル終了タグがありません。", line.prev);
-                    } else {
-                        state.intable = false;
-                    }
                 }
-            } else {
-                if (line.type == "table-start") {
-                    state.intable = true;
-                    state.table_has_start = true;
-                    state.table_end = false;
-                } else if (line.type == "table-content") {
-                    state.intable = true;
-                    state.table_has_start = false;
-                    state.table_end = false;
-                } else if (line.type == "table-end") {
-                    cb("無効なテーブル終了タグです。", line);
-                } else {
-                    // valid
+                if (!line.next && state.intable && state.table_has_start && !state.table_end) {
+                    cb("テーブル終了タグがありません。", line, "warning");
                 }
-            }
-            if (!line.next && state.intable && state.table_has_start && !state.table_end) {
-                cb("テーブル終了タグがありません。", line);
             }
         }
 
+        // アンカー
+        if (options.anchor) {
+            const all_anchors = {};
+            for (let line = lines[0]; line; line = line.next) {
+                if (line.anchors) {
+                    for (const name of line.anchors) {
+                        if (name in all_anchors) {
+                            cb("アンカー名が重複しています。ページ内リンクとして使用する場合は対処が必要です。", line, "warning");
+                        }
+                        all_anchors[name] = true;
+                    }
+                    if (line.type == "heading") {
+                        cb("見出しにアンカーが使用されています。", line, "warning");
+                    }
+                }
+            }
+        }
     }
 
     function clearLines() {
@@ -1003,11 +1071,12 @@ function setupSyntaxChecker() {
         }
     }
 
-    function addLine(message, line) {
+    function addLine(message, line, level) {
         const lineno = line.lineno;
         const start = line.start;
         const end = line.end;
         const item = document.createElement("li");
+        item.addClassName(`level-${level}`);
         const link = document.createElement("a");
         link.innerText = "L."+lineno;
         link.style.marginRight = "10px";
