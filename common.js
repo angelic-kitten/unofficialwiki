@@ -308,20 +308,13 @@ function setupAutoFilter() {
                 applyFilter(3, name); //外部
                 applyFilter(4, name); //歌ってみた
             }
-            if (title.includes("【YouTube動画一覧】") && keyword) {
-                applyFilter(0, keyword);
-            }
         }
         //ホロライブ
         if (wiki_id === "hololivetv") {
             if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
                 const name = RegExp.$1;
-                applyFilter(2, name); //簡易
-                applyFilter(3, name); //外部
-                applyFilter(4, name); //歌ってみた
-            }
-            if (title.includes("【動画一覧】") && keyword) {
-                applyFilter(0, keyword);
+                applyFilter(2, name); //オリジナルソング
+                applyFilter(3, name); //歌ってみた
             }
         }
         //のりプロ
@@ -331,15 +324,8 @@ function setupAutoFilter() {
                 applyFilter(0, name); //オリジナルソング
                 applyFilter(1, name); //歌ってみた
             }
-            if (title.includes("【動画一覧】") && keyword) {
-                applyFilter(0, keyword);
-            }
         }
         //wiki別分岐終了
-
-        if (title.includes("編集用_動画情報一覧") && keyword) {
-            applyFilter(0, keyword);
-        }
 
         //すべてのページ
         if (keyword) {
