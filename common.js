@@ -30,71 +30,6 @@ function applyFilter(idx, keyword) {
     input.val(keyword).change();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const title = document.title;
-    const params = getParams(true);
-    const keyword = params.get('keyword');
-
-//どっとライブ
-    if (location.href.startsWith("https://seesaawiki.jp/siroyoutuber/")) {
-        if (title.match(/^(?!どっとライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-            const name = RegExp.$1;
-            applyFilter(2, name); //簡易
-            applyFilter(3, name); //外部
-            applyFilter(4, name); //歌ってみた
-        }
-        if (title.includes("【YouTube動画一覧】") && keyword) {
-            applyFilter(0, keyword);
-        }
-    }
-//ホロライブ
-    if (location.href.startsWith("https://seesaawiki.jp/hololivetv/")) {
-        if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-            const name = RegExp.$1;
-            applyFilter(2, name); //簡易
-            applyFilter(3, name); //外部
-            applyFilter(4, name); //歌ってみた
-        }
-        if (title.includes("【動画一覧】") && keyword) {
-            applyFilter(0, keyword);
-        }
-    }
-//のりプロ
-    if (location.href.startsWith("https://seesaawiki.jp/noriopro/")) {
-        if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
-            const name = RegExp.$1;
-            applyFilter(0, name); //オリジナルソング
-            applyFilter(1, name); //歌ってみた
-        }
-        if (title.includes("【動画一覧】") && keyword) {
-            applyFilter(0, keyword);
-        }
-    }
-
-//wiki別分岐終了
-    if (title.includes("編集用_動画情報一覧") && keyword) {
-        applyFilter(0, keyword);
-    }
-
-    //すべてのページ
-    if (keyword) {
-        const order = params.get('order') || 0;
-        applyFilter(order, keyword);
-    }
-
-}, false);
-
-window.addEventListener("hashchange", function() {
-
-    const params = getParams(true);
-    const keyword = params.get('keyword');
-
-    if (keyword) {
-        const order = params.get('order') || 0;
-        applyFilter(order, keyword);
-    }
-
-}, false);
 
 function createFilterSearch() {
     let url = new URL(window.location.href.split('#')[0]);
@@ -292,6 +227,75 @@ $(document).ready(function() {
     };
   })());
 });
+
+////
+//  歌唱楽曲一覧自動絞り込み
+////
+document.addEventListener('DOMContentLoaded', function() {
+    const title = document.title;
+    const params = getParams(true);
+    const keyword = params.get('keyword');
+
+//どっとライブ
+    if (location.href.startsWith("https://seesaawiki.jp/siroyoutuber/")) {
+        if (title.match(/^(?!どっとライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
+            const name = RegExp.$1;
+            applyFilter(2, name); //簡易
+            applyFilter(3, name); //外部
+            applyFilter(4, name); //歌ってみた
+        }
+        if (title.includes("【YouTube動画一覧】") && keyword) {
+            applyFilter(0, keyword);
+        }
+    }
+//ホロライブ
+    if (location.href.startsWith("https://seesaawiki.jp/hololivetv/")) {
+        if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
+            const name = RegExp.$1;
+            applyFilter(2, name); //簡易
+            applyFilter(3, name); //外部
+            applyFilter(4, name); //歌ってみた
+        }
+        if (title.includes("【動画一覧】") && keyword) {
+            applyFilter(0, keyword);
+        }
+    }
+//のりプロ
+    if (location.href.startsWith("https://seesaawiki.jp/noriopro/")) {
+        if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
+            const name = RegExp.$1;
+            applyFilter(0, name); //オリジナルソング
+            applyFilter(1, name); //歌ってみた
+        }
+        if (title.includes("【動画一覧】") && keyword) {
+            applyFilter(0, keyword);
+        }
+    }
+
+//wiki別分岐終了
+    if (title.includes("編集用_動画情報一覧") && keyword) {
+        applyFilter(0, keyword);
+    }
+
+    //すべてのページ
+    if (keyword) {
+        const order = params.get('order') || 0;
+        applyFilter(order, keyword);
+    }
+
+}, false);
+
+window.addEventListener("hashchange", function() {
+
+    const params = getParams(true);
+    const keyword = params.get('keyword');
+
+    if (keyword) {
+        const order = params.get('order') || 0;
+        applyFilter(order, keyword);
+    }
+
+}, false);
 
 ////
 //縦横スクロールテーブル生成
