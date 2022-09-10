@@ -59,6 +59,18 @@ document.addEventListener('DOMContentLoaded', function() {
             applyFilter(0, keyword);
         }
     }
+//のりプロ
+    if (location.href.startsWith("https://seesaawiki.jp/noriopro/")) {
+        if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
+            const name = RegExp.$1;
+            applyFilter(0, name); //オリジナルソング
+            applyFilter(1, name); //歌ってみた
+        }
+        if (title.includes("【動画一覧】") && keyword) {
+            applyFilter(0, keyword);
+        }
+    }
+
 //wiki別分岐終了
     if (title.includes("編集用_動画情報一覧") && keyword) {
         applyFilter(0, keyword);
@@ -110,48 +122,55 @@ function createFilterSearch() {
 const title = document.title;
 //歌唱楽曲リスト
 if(title.includes("編集用_入力補助ツール")) {
-	window.setInterval(convertSongList, 1000);
+    window.setInterval(convertSongList, 1000);
 }
 
 //歌唱楽曲リスト変換
 //textArea[0-7]を使用
 //入力0-5→出力6,7
 function convertSongList() {
-	let textArea = document.getElementsByClassName("PLAIN-BOX");
-	let name = textArea[0].value.replace(/\n/g, "");
-	let roman = textArea[1].value.replace(/\n/g, "");
-	let date = textArea[2].value.replace(/\n/g, "");
-	let castTitle = textArea[3].value.replace(/\n/g, "");
-	let URL = textArea[4].value.replace(/\n/g, "");
-	let songs = textArea[5].value.split("\n");
+    let textArea = document.getElementsByClassName("PLAIN-BOX");
+    let name = textArea[0].value.replace(/\n/g, "");
+    let roman = textArea[1].value.replace(/\n/g, "");
+    let date = textArea[2].value.replace(/\n/g, "");
+    let castTitle = textArea[3].value.replace(/\n/g, "");
+    let URL = textArea[4].value.replace(/\n/g, "");
+    let songs = textArea[5].value.split("\n");
 
 
-	let castList = "|" + name + "|[[" + date + ">#data_" + roman + date.replace(/\//g, "") + "]]&aname(" + roman + date.replace(/\//g, "") + ")|" 
-					+ "[[" + castTitle + ">>" + URL + "]]|";
+    let castList = "|" + name + "|[[" + date + ">#data_" + roman + date.replace(/\//g, "") + "]]&aname(" + roman + date.replace(/\//g, "") + ")|" 
+                    + "[[" + castTitle + ">>" + URL + "]]|";
 
 
 //カウントする処理
-	let songList = "|" + name + "|[[" + date.replace(/\//g, ".") + "生" + ">#" + roman + date.replace(/\//g, "") + "]]" + "-001"
-					+ "&aname(data_" + roman + date.replace(/\//g, "") + ")|"
-					+ songs[0] + "||";
+    let songList = "|" + name + "|[[" + date.replace(/\//g, ".") + "生" + ">#" + roman + date.replace(/\//g, "") + "]]" + "-001"
+                    + "&aname(data_" + roman + date.replace(/\//g, "") + ")|"
+                    + "[[" + songs[0] + ">>" + URL + "&t=]]||";
 
-	let num = 1;
-	for (let i = 1; i < songs.length; i++) {
-		if (songs[i].length > 0) {
-		songList = songList + "\n" + "|" + name + "|[[" + date.replace(/\//g, ".") + "生"
-					+ ">#" + roman + date.replace(/\//g, "") + "]]" + "-" + String(i+1).padStart(3,"0") + "|"
-					+ songs[i] + "||";
-		num = num + 1;
-		}
-	}
+    let num = 1;
+    for (let i = 1; i < songs.length; i++) {
+        if (songs[i].length > 0) {
+        songList = songList + "\n" + "|" + name + "|[[" + date.replace(/\//g, ".") + "生"
+                    + ">#" + roman + date.replace(/\//g, "") + "]]" + "-" + String(i+1).padStart(3,"0") + "|"
+                    + "[[" + songs[i] + ">>" + URL + "&t=||";
+        num = num + 1;
+        }
+    }
+//のりプロ
+    if (location.href.startsWith("https://seesaawiki.jp/noriopro/")) {
+        castList = castList + num + "|";
+    } else {
+//どっとライブ
+//ホロライブ
+//もちぷろ
+        castList = castList + num + "||";
+    }
 
-	castList = castList + num + "||";
+    textArea[6].value = castList;
+    textArea[7].value = songList;
 
-	textArea[6].value = castList;
-	textArea[7].value = songList;
-
-	textArea[6].readOnly = true;
-	textArea[7].readOnly = true;
+    textArea[6].readOnly = true;
+    textArea[7].readOnly = true;
 }
 
 //手動実行
