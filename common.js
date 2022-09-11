@@ -1118,7 +1118,9 @@ function setupSyntaxChecker() {
         clone.style.zIndex = "-1";
         clone.style.position = "absolute";
         clone.style.height = "1px";
-        clone.value = clone.value.substring(0, start);
+        clone.style.width = `${edit_box.clientWidth}px`;
+        clone.style.overflowY = "hidden";
+        clone.value = edit_box.value.substring(0, start);
         edit_box.parentNode.appendChild(clone);
         const y = Math.max(0, clone.scrollHeight - edit_box.clientHeight/2);
         clone.remove();
