@@ -1085,6 +1085,7 @@ function setupSyntaxChecker() {
         link.href = "#L"+lineno;
         link.addEventListener("click", function(e) {
             e.preventDefault();
+            edit_box.scroll(0, calculateScrollHeight(start));
             edit_box.setSelectionRange(start, end);
             edit_box.focus();
         }, false);
@@ -1093,6 +1094,20 @@ function setupSyntaxChecker() {
         item.appendChild(link);
         item.appendChild(text);
         info.appendChild(item);
+    }
+
+    function calculateScrollHeight(start) {
+        const clone = edit_box.cloneNode();
+        clone.id = "";
+        clone.style.visibility = "hidden";
+        clone.style.zIndex = "-1";
+        clone.style.position = "absolute";
+        clone.style.height = "1px";
+        clone.value = clone.value.substring(0, start);
+        edit_box.parentNode.appendChild(clone);
+        const y = Math.max(0, clone.scrollHeight - edit_box.clientHeight/2);
+        clone.remove();
+        return y;
     }
 
 } // setupSyntaxChecker
