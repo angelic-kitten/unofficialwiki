@@ -477,7 +477,8 @@ function setupEditingTools() {
                      + "----注釈版----\n"
                      + `((Twitter [[@${pathArr[index-1]}>>${url}]]))`;
             }
-        }).filter(Boolean).join("\n\n") + "\n";
+        }).filter(Boolean).join("\n\n");
+        if (text) text += "\n";
         return text;
     }, (
         `ツイートURLからwikiタグ2種に変換する
@@ -501,7 +502,8 @@ function setupEditingTools() {
             if (vid) {
                 return `[[&ref(https://i.ytimg.com/vi/${vid}/mqdefault.jpg,100%)>>https://youtu.be/${vid}]]`;
             }
-        }).filter(Boolean).join("\n") + "\n";
+        }).filter(Boolean).join("\n");
+        if (text) text += "\n";
         return text;
     }, (
         `YouTubeの動画URLをサムネ付きタグに変換する(動画一覧用加工)
