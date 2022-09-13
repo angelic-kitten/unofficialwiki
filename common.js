@@ -5,9 +5,6 @@
 // 共通処理
 ////
 
-// Seesaa Wiki以外では実行しない
-if (location.host != "seesaawiki.jp") return;
-
 // 拡張機能が無効化されていたら実行しない
 const is_disabled = !!localStorage.getItem("extension_disabled");
 if (is_disabled) return;
