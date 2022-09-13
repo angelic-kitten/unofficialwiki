@@ -211,48 +211,54 @@ function setupSongListConverter() {
     //textArea[0-7]を使用
     //入力0-5→出力6,7
     function convertSongList() {
-        let textArea = document.getElementsByClassName("PLAIN-BOX");
-        let name = textArea[0].value.replace(/\n/g, "");
-        let roman = textArea[1].value.replace(/\n/g, "");
-        let date = textArea[2].value.replace(/\n/g, "");
-        let castTitle = textArea[3].value.replace(/\n/g, "");
-        let URL = textArea[4].value.replace(/\n/g, "");
-        let songs = textArea[5].value.split("\n");
+        const textboxes = document.getElementsByClassName("PLAIN-BOX");
+        const name = textboxes[0].value.replace(/\n/g, "");
+        const roman = textboxes[1].value.replace(/\n/g, "");
+        const dateSlash = textboxes[2].value.replace(/\n/g, "");
+        const castTitle = textboxes[3].value.replace(/\n/g, "");
+        const url = textboxes[4].value.replace(/\n/g, "");
+        const songs = textboxes[5].value.split("\n");
+        const datePlain = dateSlash.replace(/\//g, "");
+        const dateDot = dateSlash.replace(/\//g, ".");
+        const castAnchor = roman + datePlain;
+        const dataAnchor = `data_${roman}${datePlain}`;
 
+        const songRows = [];
 
-        let castList = "|" + name + "|[[" + date + ">#data_" + roman + date.replace(/\//g, "") + "]]&aname(" + roman + date.replace(/\//g, "") + ")|"
-        + "[[" + castTitle + ">>" + URL + "]]|";
-
-
-        //カウントする処理
-        let songList = "|" + name + "|[[" + date.replace(/\//g, ".") + "生" + ">#" + roman + date.replace(/\//g, "") + "]]" + "-001"
-        + "&aname(data_" + roman + date.replace(/\//g, "") + ")|"
-        + "[[" + songs[0] + ">>" + URL + "&t=]]||";
-
-        let num = 1;
-        for (let i = 1; i < songs.length; i++) {
-            if (songs[i].length > 0) {
-                songList = songList + "\n" + "|" + name + "|[[" + date.replace(/\//g, ".") + "生"
-                    + ">#" + roman + date.replace(/\//g, "") + "]]" + "-" + String(i+1).padStart(3,"0") + "|"
-                    + "[[" + songs[i] + ">>" + URL + "&t=]]||";
-                num = num + 1;
+        for (const songName of songs) {
+            if (!songName) continue;
+            const index = String(songRows.length + 1).padStart(3, "0");
+            const songRow = [
+                name,
+                `[[${dateDot}生>#${castAnchor}]]-${index}`,
+                `[[${escapeWikiComponents(songName)}>>${url}&t=]]`,
+                ""
+            ];
+            if (songRows.length == 0) {
+                songRow[1] += `&aname(${dataAnchor})`;
             }
-        }
-        //のりプロ
-        if (wiki_id === "noriopro") {
-            castList = castList + num + "|";
-        } else {
-            //どっとライブ
-            //ホロライブ
-            //もちぷろ
-            castList = castList + num + "||";
+            songRows.push("|"+songRow.join("|")+"|");
         }
 
-        textArea[6].value = castList;
-        textArea[7].value = songList;
+        const castRow = [
+            name,
+            `[[${dateSlash}>#${dataAnchor}]]&aname(${castAnchor})`,
+            `[[${escapeWikiComponents(castTitle)}>>${url}]]`,
+            String(songRows.length)
+        ];
 
-        textArea[6].readOnly = true;
-        textArea[7].readOnly = true;
+        //どっとライブ
+        //ホロライブ
+        //もちぷろ
+        if (wiki_id === "siroyoutuber" || wiki_id === "hololivetv" || wiki_id === "mochi8hiyoko") {
+            castRow.push("");
+        }
+
+        textboxes[6].value = "|"+castRow.join("|")+"|";
+        textboxes[7].value = songRows.join("\n");
+
+        textboxes[6].readOnly = true;
+        textboxes[7].readOnly = true;
     }
 
 } // setupSongListConverter
@@ -454,8 +460,7 @@ function setupEditingTools() {
     });
 
     addSimpleProcessor("htmlref", "実体参照変換", function(text) {
-        text = text.replace(/[#!%&'()*+,.:=>@[\]\^_|~-]/g, (v)=>("&#" + v.codePointAt(0) + ";"));
-        return text;
+        return escapeWikiComponents(text);
     }, (
         `数値参照に変換する(wiki記法と衝突する文字処理用)
 
@@ -1223,6 +1228,14 @@ function initMembersData() {
         };
     }
     return null;
+}
+
+////
+// その他
+////
+
+function escapeWikiComponents(text) {
+    return text.replace(/[#!%&'()*+,.:=>@[\]\^_|~-]/g, (v)=>("&#" + v.codePointAt(0) + ";"));
 }
 
 })();
