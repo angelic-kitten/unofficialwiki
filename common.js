@@ -541,7 +541,7 @@ setupEditingTools() {
         # → &#35; など`.replace(/^[ \t]+/gm, "")
     ));
 
-    addSimpleProcessor("tweetref", "ツイート参照タグ生成", (text)=>{
+    addSimpleProcessor("tweetref", "ツイート参照タグ", (text)=>{
         text = text.split(/[\r\n]+/).map((line)=>{
             const url = parseURL(line);
             if (url && url.hostname === "twitter.com") {
@@ -564,7 +564,28 @@ setupEditingTools() {
         ((Twitter [[@tokino_sora>>https://twitter.com/tokino_sora/status/1567175591358787585]]))`.replace(/^[ \t]+/gm, "")
     ));
 
-    addSimpleProcessor("videolist", "動画一覧用加工", (text)=>{
+    addSimpleProcessor("hashtag", "ハッシュタグリンク", (text)=>{
+        // 日本語向けに簡易判定
+        const char = /(?:[0-9A-Za-z_]|(?![\u3000-\u3002\u3004\u3007-\u301b\uff01-\uff0f\uff1a-\uff1f\uff3b-\uff40\uff5b-\uff65])[^\x00-\x7f])/;
+        // [[リンク]] と URL を回避
+        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9a-z\!\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\=\?\@\_\~]+)/i;
+        const pattern = new RegExp(`${avoid.source}|(?<!&(?=#[0-9A-Za-z]+;)|${char.source})[#＃](${char.source}+)`, "ig");
+        text = text.replace(pattern, (orig, tag)=>{
+            if (!tag) return orig;
+            if (!/[^0-9_]/.test(tag)) return orig;
+            const escapedTag = WikiExtension.escapeWikiComponents("#"+tag);
+            return `[[${escapedTag}>>https://twitter.com/hashtag/${encodeURI(tag)}]]`;
+        });
+        return text;
+    }, (
+        `テキスト中のTwitterハッシュタグに自動でリンクを張る
+
+        ハッシュタグ「#ホロライブ」でツイート
+        ↓↓↓
+        ハッシュタグ「[[&#35;ホロライブ>>https://twitter.com/hashtag/%E3%83%9B%E3%83%AD%E3%83%A9%E3%82%A4%E3%83%96]]」でツイート`.replace(/^[ \t]+/gm, "")
+    ));
+
+    addSimpleProcessor("videolist", "動画サムネ付きリンク", (text)=>{
         text = text.split(/[\r\n]+/).map((line)=>{
             const url = parseURL(line);
             let vid;
@@ -590,7 +611,7 @@ setupEditingTools() {
 
     if (this.membersData) {
         const repr = Object.getOwnPropertyNames(this.membersData)[0];
-        addSimpleProcessor("liveeurl", "YouTube配信URL", (text)=>{
+        addSimpleProcessor("liveeurl", "YouTube配信リンク", (text)=>{
             for (const key in this.membersData) {
                 const reftag = `[[${this.membersData[key].name}>>https://www.youtube.com/channel/${this.membersData[key].yt}/live]]`;
                 text = text.replaceAll(this.membersData[key].name, reftag);
