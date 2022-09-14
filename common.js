@@ -1,96 +1,164 @@
 (function() {
 'use strict';
 
-////
-// 共通処理
-////
-
-// Seesaa Wiki以外では実行しない
-if (location.host != "seesaawiki.jp") return;
-
 // 拡張機能が無効化されていたら実行しない
 const is_disabled = !!localStorage.getItem("extension_disabled");
 if (is_disabled) return;
 
-// Wiki IDを取得
-const [wiki_id, rest_path] = location.pathname.split(/^\/(?:w\/)?([^\/]+)/).slice(1);
+////
+// Wiki拡張本体
+////
 
-// ページ種別を判定
-const is_article_page = rest_path.startsWith("/d/") || rest_path === "/";
-const is_edit_page = rest_path.startsWith("/e/");
-const is_comment_page = rest_path.startsWith("/comment/");
-const is_list_page = rest_path.startsWith("/l/");
-const is_diff_page = rest_path.startsWith("/diff/");
-const is_history_page = rest_path.startsWith("/history/");
-const is_version_page = rest_path.startsWith("/dv/");
-const is_members_page = rest_path.startsWith("/members/");
-const is_member_history_page = rest_path.startsWith("/r/");
-const is_bbs_page = rest_path.startsWith("/bbs/");
-const is_search_page = rest_path.startsWith("/search");
+class WikiExtension {
 
-// スマホモードの判定
-const mobile_layout = !!document.head.querySelector("meta[name='format-detection']");
+////
+// 共通処理
+////
+
+constructor() {
+    this.readyState = "initializing";
+    if (document.readyState === "loading") {
+        document.addEventListener("readystatechange", (e)=>{
+            if (document.readyState === "interactive") {
+                this.init();
+            }
+       });
+    } else {
+        this.init();
+    }
+} // constructor
+
+// 初期化
+init() {
+    if (this.readyState !== "initializing") {
+        throw new Error("already initialized");
+    }
+
+    this.initPageInfo();
+    this.initExperimental();
+    this.initMembersData();
+    this.readyState = "initialized";
+
+    const shouldStopBeforeSetup = !!localStorage.getItem("stop_before_setup");
+    if (shouldStopBeforeSetup) {
+        console.log("setup stopped");
+    } else {
+        window.setTimeout(()=>{ this.setup() });
+    }
+} // init
+
+// 各画面に魔改造を適用
+setup() {
+    if (this.readyState === "initializing") {
+        throw new Error("not yet initialized");
+    }
+
+    if (this.pageType === "article") {
+        this.setupStripedTable();
+        this.setupTableFilter();
+        this.setupScrollableTable();
+        this.setupSongListConverter(); // 入力補助ツールページ
+        this.setupRegexReplacer(); // 入力補助ツールページ
+        this.setupAutoFilter(); // 歌唱楽曲一覧ページなど
+        if (!this.isMobileLayout) {
+            this.setupTableFilterGenerator(); // 右メニュー
+        }
+
+    } else if (this.pageType === "edit") {
+        // PC版のみ適用
+        if (this.isExperimentalEnabled && !this.isMobileLayout) {
+            this.setupEditingTools();
+            this.setupSyntaxChecker();
+        }
+    }
+
+    this.readyState = "setup";
+    console.log("extension has applied.");
+} // setup
+
+// ページ情報を確認
+initPageInfo() {
+    let wikiId = null;
+    let restPath = "";
+
+    if (location.hostname === "seesaawiki.jp") {
+        [wikiId, restPath] = location.pathname.split(/^\/(?:w\/)?([^\/]+)/).slice(1);
+    }
+
+    // Wiki ID
+    this.wikiId = wikiId;
+    // ページ種別
+    this.pageType = getPageType(restPath);
+    // スマホ向け
+    this.isMobileLayout = !!document.head.querySelector("meta[name='format-detection']");
+
+    function getPageType(restPath) {
+        if (restPath.startsWith("/d/") || restPath === "/") {
+            return "article";
+        } else if (restPath.startsWith("/e/")) {
+            return "edit";
+        } else if (restPath.startsWith("/comment/")) {
+            return "comment";
+        } else if (restPath.startsWith("/l/")) {
+            return "page_list";
+        } else if (restPath.startsWith("/diff/")) {
+            return "diff";
+        } else if (restPath.startsWith("/history/")) {
+            return "history";
+        } else if (restPath.startsWith("/dv/")) {
+            return "version";
+        } else if (restPath.startsWith("/members/")) {
+            return "members";
+        } else if (restPath.startsWith("/r/")) {
+            return "member_history";
+        } else if (restPath.startsWith("/bbs/")) {
+            return "bbs";
+        } else if (restPath.startsWith("/search")) {
+            return "search";
+        }
+        return null;
+    }
+} // initPageInfo
 
 // 実験モードの確認・切り替え
-let is_experimental_enabled = !!localStorage.getItem("experimental_mode");
-(function() {
-    if (is_experimental_enabled) {
+initExperimental() {
+    this.isExperimentalEnabled = !!localStorage.getItem("experimental_mode");
+    if (this.isExperimentalEnabled) {
         console.log("experimental mode: on");
     }
-    function checkExperimental() {
+
+    const checkExperimental = ()=>{
         let changed = false;
         if (location.hash === "#enable-experimental") {
-            is_experimental_enabled = true;
+            this.isExperimentalEnabled = true;
             changed = true;
         } else if (location.hash === "#disable-experimental") {
-            is_experimental_enabled = false;
+            this.isExperimentalEnabled = false;
             changed = true;
         }
+
         if (changed) {
-            console.log("experimental mode: " + (is_experimental_enabled ? "on" : "off"));
+            console.log("experimental mode: " + (this.isExperimentalEnabled ? "on" : "off"));
             history.replaceState(null, null, location.pathname + location.search);
-            if (is_experimental_enabled) {
+            if (this.isExperimentalEnabled) {
                 localStorage.setItem("experimental_mode", "true");
             } else {
                 localStorage.removeItem("experimental_mode");
             }
         }
-    }
+    };
+
     window.addEventListener("hashchange", function(e) {
         checkExperimental();
     });
     checkExperimental();
-})();
-
-// 各画面に魔改造を適用
-if (is_article_page) {
-    window.addEventListener("DOMContentLoaded", function() {
-        setupStripedTable();
-        setupTableFilter();
-        setupScrollableTable();
-        setupSongListConverter(); // 入力補助ツールページ
-        setupRegexReplacer(); // 入力補助ツールページ
-        setupAutoFilter(); // 歌唱楽曲一覧ページなど
-        if (!mobile_layout) {
-            setupTableFilterGenerator(); // 右メニュー
-        }
-    });
-
-} else if (is_edit_page) {
-    // PC版のみ適用
-    if (is_experimental_enabled && !mobile_layout) {
-        window.addEventListener("DOMContentLoaded", function() {
-            setupEditingTools();
-            setupSyntaxChecker();
-        });
-    }
-}
+} // initExperimental
 
 ////
 // ストライプ表示機能 class="stripe" (記事画面)
 ////
 
-function setupStripedTable() {
+setupStripedTable() {
 
     // ストライプ表示を更新するやつ
     $("table.stripe").on("update-stripe", function(){
@@ -113,7 +181,7 @@ function setupStripedTable() {
 // フィルター機能の改善 class="filter regex" (記事画面)
 ////
 
-function setupTableFilter() {
+setupTableFilter() {
 
     // テーブルにイイカンジのフィルター機能を搭載
     $("table.filter").each(function(i){
@@ -188,7 +256,7 @@ function setupTableFilter() {
 // 縦横スクロールテーブル class="scrollX scrollY" (記事画面)
 ////
 
-function setupScrollableTable() {
+setupScrollableTable() {
 
     $('table[id*="content_block_"].scrollX').wrap('<div class="x-scroller">');
     $('table[id*="content_block_"].scrollY').wrap('<div class="y-scroller">');
@@ -199,61 +267,70 @@ function setupScrollableTable() {
 // 歌唱楽曲リスト変換ツール (入力補助ツールページ)
 ////
 
-function setupSongListConverter() {
+setupSongListConverter() {
 
     const title = document.title;
-    //歌唱楽曲リスト
+
     if (title.includes("編集用_入力補助ツール")) {
-        window.setInterval(convertSongList, 1000);
+        window.setInterval(convertSongList.bind(this), 1000);
     }
 
     //歌唱楽曲リスト変換
     //textArea[0-7]を使用
     //入力0-5→出力6,7
     function convertSongList() {
-        let textArea = document.getElementsByClassName("PLAIN-BOX");
-        let name = textArea[0].value.replace(/\n/g, "");
-        let roman = textArea[1].value.replace(/\n/g, "");
-        let date = textArea[2].value.replace(/\n/g, "");
-        let castTitle = textArea[3].value.replace(/\n/g, "");
-        let URL = textArea[4].value.replace(/\n/g, "");
-        let songs = textArea[5].value.split("\n");
+        const textboxes = document.getElementsByClassName("PLAIN-BOX");
+        const name = textboxes[0].value.replace(/\n/g, "");
+        const roman = textboxes[1].value.replace(/\n/g, "");
+        const dateSlash = textboxes[2].value.replace(/\n/g, "");
+        const castTitle = textboxes[3].value.replace(/\n/g, "");
+        const url = textboxes[4].value.replace(/\n/g, "");
+        const songs = textboxes[5].value.split("\n");
+        const datePlain = dateSlash.replace(/\//g, "");
+        const dateDot = dateSlash.replace(/\//g, ".");
+        const castAnchor = roman + datePlain;
+        const dataAnchor = `data_${roman}${datePlain}`;
+        const escapedCastTitle = WikiExtension.escapeWikiComponents(castTitle);
 
+        const songRows = [];
 
-        let castList = "|" + name + "|[[" + date + ">#data_" + roman + date.replace(/\//g, "") + "]]&aname(" + roman + date.replace(/\//g, "") + ")|"
-        + "[[" + castTitle + ">>" + URL + "]]|";
-
-
-        //カウントする処理
-        let songList = "|" + name + "|[[" + date.replace(/\//g, ".") + "生" + ">#" + roman + date.replace(/\//g, "") + "]]" + "-001"
-        + "&aname(data_" + roman + date.replace(/\//g, "") + ")|"
-        + "[[" + songs[0] + ">>" + URL + "&t=]]||";
-
-        let num = 1;
-        for (let i = 1; i < songs.length; i++) {
-            if (songs[i].length > 0) {
-                songList = songList + "\n" + "|" + name + "|[[" + date.replace(/\//g, ".") + "生"
-                    + ">#" + roman + date.replace(/\//g, "") + "]]" + "-" + String(i+1).padStart(3,"0") + "|"
-                    + "[[" + songs[i] + ">>" + URL + "&t=]]||";
-                num = num + 1;
+        for (const songName of songs) {
+            if (!songName) continue;
+            const escapedSongName = WikiExtension.escapeWikiComponents(songName);
+            const index = String(songRows.length + 1).padStart(3, "0");
+            const songRow = [
+                name,
+                `[[${dateDot}生>#${castAnchor}]]-${index}`,
+                `[[${escapedSongName}>>${url}&t=]]`,
+                ""
+            ];
+            if (songRows.length == 0) {
+                songRow[1] += `&aname(${dataAnchor})`;
             }
-        }
-        //のりプロ
-        if (wiki_id === "noriopro") {
-            castList = castList + num + "|";
-        } else {
-            //どっとライブ
-            //ホロライブ
-            //もちぷろ
-            castList = castList + num + "||";
+            songRows.push("|"+songRow.join("|")+"|");
         }
 
-        textArea[6].value = castList;
-        textArea[7].value = songList;
+        const castRow = [
+            name,
+            `[[${dateSlash}>#${dataAnchor}]]&aname(${castAnchor})`,
+            `[[${escapedCastTitle}>>${url}]]`,
+            String(songRows.length)
+        ];
 
-        textArea[6].readOnly = true;
-        textArea[7].readOnly = true;
-    }
+        switch (this.wikiId) {
+            case "siroyoutuber": // どっとライブ
+            case "hololivetv": // ホロライブ
+            case "mochi8hiyoko": // もちぷろ
+                castRow.push("");
+                break;
+        }
+
+        textboxes[6].value = "|"+castRow.join("|")+"|";
+        textboxes[7].value = songRows.join("\n");
+
+        textboxes[6].readOnly = true;
+        textboxes[7].readOnly = true;
+    };
 
 } // setupSongListConverter
 
@@ -261,7 +338,7 @@ function setupSongListConverter() {
 // 正規表現置換ツール (入力補助ツールページ)
 ////
 
-function setupRegexReplacer() {
+setupRegexReplacer() {
 
     initRegexReplacer();
 
@@ -291,9 +368,9 @@ function setupRegexReplacer() {
 // 自動絞り込み (歌唱楽曲一覧ページなど)
 ////
 
-function setupAutoFilter() {
+setupAutoFilter() {
 
-    applyFilters();
+    applyFilters.call(this);
 
     function applyFilters() {
         const title = document.title;
@@ -301,7 +378,7 @@ function setupAutoFilter() {
         const keyword = params.get('keyword');
 
         //どっとライブ
-        if (wiki_id === "siroyoutuber") {
+        if (this.wikiId === "siroyoutuber") {
             if (title.match(/^(?!どっとライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
                 const name = RegExp.$1;
                 applyFilter(2, name); //簡易
@@ -310,7 +387,7 @@ function setupAutoFilter() {
             }
         }
         //ホロライブ
-        if (wiki_id === "hololivetv") {
+        if (this.wikiId === "hololivetv") {
             if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
                 const name = RegExp.$1;
                 applyFilter(2, name); //オリジナルソング
@@ -318,7 +395,7 @@ function setupAutoFilter() {
             }
         }
         //のりプロ
-        if (wiki_id === "noriopro") {
+        if (this.wikiId === "noriopro") {
             if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
                 const name = RegExp.$1;
                 applyFilter(0, name); //オリジナルソング
@@ -332,7 +409,7 @@ function setupAutoFilter() {
             const order = params.get('order') || 0;
             applyFilter(order, keyword);
         }
-    }
+    };
 
     window.addEventListener("hashchange", function() {
         const params = getParams(true);
@@ -377,13 +454,13 @@ function setupAutoFilter() {
         }
     }
 
-} // setupSongListAutoFilter
+} // setupAutoFilter
 
 ////
 // フィルターリンク生成機能 (記事画面右メニュー)
 ////
 
-function setupTableFilterGenerator() {
+setupTableFilterGenerator() {
 
     // HTML側から関数を呼び出せるように
     window.createFilterSearch = createFilterSearch;
@@ -416,7 +493,7 @@ function setupTableFilterGenerator() {
 // 編集ツール (編集画面)
 ////
 
-function setupEditingTools() {
+setupEditingTools() {
 
     let is_area_open = !!localStorage.getItem("tools_area_open");
     const tools_area = initEditingTools();
@@ -453,9 +530,8 @@ function setupEditingTools() {
         }
     });
 
-    addSimpleProcessor("htmlref", "実体参照変換", function(text) {
-        text = text.replace(/[#!%&'()*+,.:=>@[\]\^_|~-]/g, (v)=>("&#" + v.codePointAt(0) + ";"));
-        return text;
+    addSimpleProcessor("htmlref", "実体参照変換", (text)=>{
+        return WikiExtension.escapeWikiComponents(text);
     }, (
         `数値参照に変換する(wiki記法と衝突する文字処理用)
 
@@ -465,7 +541,7 @@ function setupEditingTools() {
         # → &#35; など`.replace(/^[ \t]+/gm, "")
     ));
 
-    addSimpleProcessor("tweetref", "ツイート参照タグ生成", function(text) {
+    addSimpleProcessor("tweetref", "ツイート参照タグ", (text)=>{
         text = text.split(/[\r\n]+/).map((line)=>{
             const url = parseURL(line);
             if (url && url.hostname === "twitter.com") {
@@ -475,7 +551,8 @@ function setupEditingTools() {
                      + "----注釈版----\n"
                      + `((Twitter [[@${pathArr[index-1]}>>${url}]]))`;
             }
-        }).filter(Boolean).join("\n\n") + "\n";
+        }).filter(Boolean).join("\n\n");
+        if (text) text += "\n";
         return text;
     }, (
         `ツイートURLからwikiタグ2種に変換する
@@ -487,7 +564,28 @@ function setupEditingTools() {
         ((Twitter [[@tokino_sora>>https://twitter.com/tokino_sora/status/1567175591358787585]]))`.replace(/^[ \t]+/gm, "")
     ));
 
-    addSimpleProcessor("videolist", "動画一覧用加工", function(text) {
+    addSimpleProcessor("hashtag", "ハッシュタグリンク", (text)=>{
+        // 日本語向けに簡易判定
+        const char = /(?:[0-9A-Za-z_]|(?![\u3000-\u3002\u3004\u3007-\u301b\uff01-\uff0f\uff1a-\uff1f\uff3b-\uff40\uff5b-\uff65])[^\x00-\x7f])/;
+        // [[リンク]] と URL を回避
+        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9a-z\!\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\=\?\@\_\~]+)/i;
+        const pattern = new RegExp(`${avoid.source}|(?<!&(?=#[0-9A-Za-z]+;)|${char.source})[#＃](${char.source}+)`, "ig");
+        text = text.replace(pattern, (orig, tag)=>{
+            if (!tag) return orig;
+            if (!/[^0-9_]/.test(tag)) return orig;
+            const escapedTag = WikiExtension.escapeWikiComponents("#"+tag);
+            return `[[${escapedTag}>>https://twitter.com/hashtag/${encodeURI(tag)}]]`;
+        });
+        return text;
+    }, (
+        `テキスト中のTwitterハッシュタグに自動でリンクを張る
+
+        ハッシュタグ「#ホロライブ」でツイート
+        ↓↓↓
+        ハッシュタグ「[[&#35;ホロライブ>>https://twitter.com/hashtag/%E3%83%9B%E3%83%AD%E3%83%A9%E3%82%A4%E3%83%96]]」でツイート`.replace(/^[ \t]+/gm, "")
+    ));
+
+    addSimpleProcessor("videolist", "動画サムネ付きリンク", (text)=>{
         text = text.split(/[\r\n]+/).map((line)=>{
             const url = parseURL(line);
             let vid;
@@ -499,7 +597,8 @@ function setupEditingTools() {
             if (vid) {
                 return `[[&ref(https://i.ytimg.com/vi/${vid}/mqdefault.jpg,100%)>>https://youtu.be/${vid}]]`;
             }
-        }).filter(Boolean).join("\n") + "\n";
+        }).filter(Boolean).join("\n");
+        if (text) text += "\n";
         return text;
     }, (
         `YouTubeの動画URLをサムネ付きタグに変換する(動画一覧用加工)
@@ -510,21 +609,20 @@ function setupEditingTools() {
         [[&ref(https://i.ytimg.com/vi/TjGC7Jzc5ns/mqdefault.jpg,100%)>>https://youtu.be/TjGC7Jzc5ns]]`.replace(/^[ \t]+/gm, "")
     ));
 
-    const members_data = initMembersData();
-    if (members_data) {
-        const repr = Object.getOwnPropertyNames(members_data)[0];
-        addSimpleProcessor("liveeurl", "YouTube配信URL", function(text) {
-            for (const key in members_data) {
-                const reftag = `[[${members_data[key].name}>>https://www.youtube.com/channel/${members_data[key].yt}/live]]`;
-                text = text.replaceAll(members_data[key].name, reftag);
+    if (this.membersData) {
+        const repr = Object.getOwnPropertyNames(this.membersData)[0];
+        addSimpleProcessor("liveeurl", "YouTube配信リンク", (text)=>{
+            for (const key in this.membersData) {
+                const reftag = `[[${this.membersData[key].name}>>https://www.youtube.com/channel/${this.membersData[key].yt}/live]]`;
+                text = text.replaceAll(this.membersData[key].name, reftag);
             }
             return text;
         }, (
             `メンバー名をYouTube配信へのリンクに変換する
 
-            ${members_data[repr].name}
+            ${this.membersData[repr].name}
             ↓↓↓
-            [[${members_data[repr].name}>>https://www.youtube.com/channel/${members_data[repr].yt}/live]]`.replace(/^[ \t]+/gm, "")
+            [[${this.membersData[repr].name}>>https://www.youtube.com/channel/${this.membersData[repr].yt}/live]]`.replace(/^[ \t]+/gm, "")
         ));
     }
 
@@ -745,7 +843,7 @@ function setupEditingTools() {
 // 文法チェッカー (編集画面)
 ////
 
-function setupSyntaxChecker() {
+setupSyntaxChecker() {
 
     const edit_box = document.querySelector("textarea#content");
     const info = document.createElement("ul");
@@ -1103,7 +1201,9 @@ function setupSyntaxChecker() {
         clone.style.zIndex = "-1";
         clone.style.position = "absolute";
         clone.style.height = "1px";
-        clone.value = clone.value.substring(0, start);
+        clone.style.width = `${edit_box.clientWidth}px`;
+        clone.style.overflowY = "hidden";
+        clone.value = edit_box.value.substring(0, start);
         edit_box.parentNode.appendChild(clone);
         const y = Math.max(0, clone.scrollHeight - edit_box.clientHeight/2);
         clone.remove();
@@ -1112,80 +1212,84 @@ function setupSyntaxChecker() {
 
 } // setupSyntaxChecker
 
-function initMembersData() {
-    if (wiki_id === "hololivetv") {
-        return {
-            sora:		{yt: "UCp6993wxpyDPHUpavwDFqgg", bi: "8899503", tw: "", name: "ときのそら", tag: "#ときのそら生放送"},
-            roboco:		{yt: "UCDqI2jOz0weumE8s7paEk6g", bi: "4664126", tw: "", name: "ロボ子さん", tag: "#ロボ子生放送"},
-            mel:		{yt: "UCD8HOxPs4Xvsm8H0ZxXGiBw", bi: "21131813", tw: "", name: "夜空メル", tag: "#メル生放送"},
-            rose:		{yt: "UCFTLzh12_nrtzqBPsTCqenA", bi: "21219990", tw: "", name: "アキロゼ", tag: "#アキびゅーわーるど"},
-            haato:		{yt: "UC1CfXB_kRs3C-zaeTG3oGyg", bi: "14275133", tw: "", name: "赤井はあと", tag: "#はあちゃまなう"},
-            fubuki:		{yt: "UCdn5BQ06XqgXoAxIhbqw5Rg", bi: "11588230", tw: "", name: "白上フブキ", tag: "#フブキch"},
-            matsuri:	{yt: "UCQ0UDLQCjY0rmuxCDE38FGg", bi: "13946381", tw: "", name: "夏色まつり", tag: "#夏まつch"},
-            aqua:		{yt: "UC1opHUrw8rvnsadT-iGp7Cg", bi: "14917277", tw: "", name: "湊あくあ", tag: "#湊あくあ生放送"},
-            shion:		{yt: "UCXTpFs_3PqI41qX2d9tL2Rw", bi: "21132965", tw: "", name: "紫咲シオン", tag: "#紫咲シオン"},
-            nakiri:		{yt: "UC7fk0CB07ly8oSl0aqKkqFg", bi: "21130785", tw: "", name: "百鬼あやめ", tag: "#百鬼あやめch"},
-            choco:		{yt: "UC1suqwovbL1kzsoaZgFZLKg", bi: "21107534", tw: "", name: "癒月ちょこ", tag: "#癒月診療所"},
-            subaru:		{yt: "UCvzGlP9oQwU--Y0r9id_jnA", bi: "21129632", tw: "", name: "大空スバル", tag: "#生スバル"},
-            mio:		{yt: "UCp-5t9SrOQwXMU7iIjQfARg", bi: "21133979", tw: "", name: "大神ミオ", tag: "#ミオかわいい"},
-            miko:		{yt: "UC-hM6YJuNYVAmUWxeIr9FeA", bi: "21144047", tw: "", name: "さくらみこ", tag: "#みこなま"},
-            korone:		{yt: "UChAnqc_AY5_I3Px5dig3X1Q", bi: "21421141", tw: "", name: "戌神ころね", tag: "#生神もんざえもん"},
-            okayu:		{yt: "UCvaTdHTWBGv3MKj3KVqJVCw", bi: "21420932", tw: "", name: "猫又おかゆ", tag: "#生おかゆ"},
-            azki:		{yt: "UC0TXe_LYZ4scaW2XMyi5_kw", bi: "21267062", tw: "", name: "AZKi", tag: "#AZKi生放送・#あずきんち"},
-            suisei:		{yt: "UC5CwaMl1eIgY8h02uZw7u8A", bi: "190577", tw: "", name: "星街すいせい", tag: "#ほしまちすたじお"},
-            pekora:		{yt: "UC1DCedRgGHBdm81E1llLhOQ", bi: "21560356", tw: "", name: "兎田ぺこら", tag: "#ぺこらいぶ"},
-            rushia:		{yt: "UCl_gCybOJRIgOXw6Qb4qJzQ", bi: "21545232", tw: "", name: "潤羽るしあ", tag: "#るしあらいぶ"},
-            flare:		{yt: "UCvInZx9h3jC2JzsIzoOebWg", bi: "21572617", tw: "", name: "不知火フレア", tag: "#フレアストリーム"},
-            noel:		{yt: "UCdyqAaZDKHXg4Ahi7VENThQ", bi: "21583736", tw: "", name: "白銀ノエル", tag: "#ノエルーム"},
-            marine:		{yt: "UCCzUftO8KOVkV4wQG1vkUvg", bi: "21584153", tw: "", name: "宝鐘マリン", tag: "#マリン航海記"},
-            kanata:		{yt: "UCZlDXzGoo7d44bwdNObFacg", bi: "21752681", tw: "", name: "天音かなた", tag: "#天界学園放送部"},
-            coco:		{yt: "UCS9uQI-jC3DE0L4IpXyvr6w", bi: "21752686", tw: "", name: "桐生ココ", tag: "#ココここ"},
-            watame:		{yt: "UCqm3BQLlJfvkTsX_hvm0UmA", bi: "21752694", tw: "", name: "角巻わため", tag: "#ドドドライブ"},
-            towa:		{yt: "UC1uv2Oq6kNxgATlCiez59hw", bi: "21752710", tw: "", name: "常闇トワ", tag: "#トワイライヴ"},
-            luna:		{yt: "UCa9Y57gfeY0Zro_noHRVrnw", bi: "21752719", tw: "", name: "姫森ルーナ", tag: "#なのらいぶ"},
-            lamy:		{yt: "UCFKOVgVbGmX65RxO3EtH3iw", bi: "", tw: "", name: "雪花ラミィ", tag: "#らみらいぶ"},
-            nene:		{yt: "UCAWSyEs_Io8MtpY3m-zqILA", bi: "", tw: "", name: "桃鈴ねね", tag: "#ねねいろらいぶ"},
-            botan:		{yt: "UCUKD-uaobj9jiqB-VXt71mA", bi: "", tw: "", name: "獅白ぼたん", tag: "#ぐうたらいぶ"},
-            aloe:		{yt: "UCgZuwn-O7Szh9cAgHqJ6vjw", bi: "", tw: "", name: "魔乃アロエ", tag: "#魔のらいぶ"},
-            polka:		{yt: "UCK9V2B22uJYu3N7eR_BT9QA", bi: "", tw: "", name: "尾丸ポルカ", tag: "#ポルカ公演中"},
-            Laplus:		{yt: "UCENwRMx5Yh42zWpzURebzTw", bi:"", tw: "", name: "ラプラス・ダークネス", tag: ""},
-            Lui:		{yt: "UCs9_O1tRPMQTHQ-N_L6FU2g", bi:"", tw: "", name: "鷹嶺ルイ", tag: ""},
-            Koyori:		{yt: "UC6eWCld0KwmyHFbAqK3V-Rw", bi:"", tw: "", name: "博衣こより", tag: ""},
-            Chloe:		{yt: "UCIBY1ollUsauvVi4hW4cumw", bi:"", tw: "", name: "沙花叉クロヱ", tag: ""},
-            Iroha:		{yt: "UC_vMYWcDjmfdpH6r4TTn1MQ", bi:"", tw: "", name: "風真いろは", tag: ""},
+////
+// メンバー情報 (編集ツールで使用)
+////
 
-            risu:		{yt: "UCOyYb1c43VlX9rc_lT6NKQw", bi:"", tw:"", name: "Ayunda Risu", tag: ""},
-            moona:		{yt: "UCP0BspO_AMEe3aQqqpo89Dg", bi:"", tw:"", name: "Moona Hoshinova", tag: ""},
-            iofi:		{yt: "UCAoy6rzhSf4ydcYjJw3WoVg", bi:"", tw:"", name: "Airani Iofifteen", tag: ""},
-            ollie:		{yt: "UCYz_5n-uDuChHtLo7My1HnQ", bi:"", tw:"", name: "Kureiji Ollie", tag: ""},
-            anya:		{yt: "UC727SQYUvx5pDDGQpTICNWg", bi:"", tw:"", name: "Anya Melfissa", tag: ""},
-            reine:		{yt: "UChgTyjG-pdNvxxhdsXfHQ5Q", bi:"", tw:"", name: "Pavolia Reine", tag: ""},
-            zeta:		{yt: "UCTvHWSfBZgtxE4sILOaurIQ", bi:"", tw:"", name: "Vestia Zeta", tag: ""},
-            kaela:		{yt: "UCZLZ8Jjx_RN2CXloOmgTHVg", bi:"", tw:"", name: "Kaela Kovalskia", tag: ""},
-            kobo:		{yt: "UCjLEmnpCNeisMxy134KPwWw", bi:"", tw:"", name: "Kobo Kanaeru", tag: ""},
-            indonesia:	{yt: "UCfrWoRGlawPQDQxxeIDRP0Q", bi:"", tw:"", name: "hololive Indonesia",tag: ""},
+initMembersData() {
+    if (this.wikiId === "hololivetv") {
+        this.membersData = {
+            sora:       {yt: "UCp6993wxpyDPHUpavwDFqgg", bi: "8899503", tw: "", name: "ときのそら", tag: "#ときのそら生放送"},
+            roboco:     {yt: "UCDqI2jOz0weumE8s7paEk6g", bi: "4664126", tw: "", name: "ロボ子さん", tag: "#ロボ子生放送"},
+            mel:        {yt: "UCD8HOxPs4Xvsm8H0ZxXGiBw", bi: "21131813", tw: "", name: "夜空メル", tag: "#メル生放送"},
+            rose:       {yt: "UCFTLzh12_nrtzqBPsTCqenA", bi: "21219990", tw: "", name: "アキロゼ", tag: "#アキびゅーわーるど"},
+            haato:      {yt: "UC1CfXB_kRs3C-zaeTG3oGyg", bi: "14275133", tw: "", name: "赤井はあと", tag: "#はあちゃまなう"},
+            fubuki:     {yt: "UCdn5BQ06XqgXoAxIhbqw5Rg", bi: "11588230", tw: "", name: "白上フブキ", tag: "#フブキch"},
+            matsuri:    {yt: "UCQ0UDLQCjY0rmuxCDE38FGg", bi: "13946381", tw: "", name: "夏色まつり", tag: "#夏まつch"},
+            aqua:       {yt: "UC1opHUrw8rvnsadT-iGp7Cg", bi: "14917277", tw: "", name: "湊あくあ", tag: "#湊あくあ生放送"},
+            shion:      {yt: "UCXTpFs_3PqI41qX2d9tL2Rw", bi: "21132965", tw: "", name: "紫咲シオン", tag: "#紫咲シオン"},
+            nakiri:     {yt: "UC7fk0CB07ly8oSl0aqKkqFg", bi: "21130785", tw: "", name: "百鬼あやめ", tag: "#百鬼あやめch"},
+            choco:      {yt: "UC1suqwovbL1kzsoaZgFZLKg", bi: "21107534", tw: "", name: "癒月ちょこ", tag: "#癒月診療所"},
+            subaru:     {yt: "UCvzGlP9oQwU--Y0r9id_jnA", bi: "21129632", tw: "", name: "大空スバル", tag: "#生スバル"},
+            mio:        {yt: "UCp-5t9SrOQwXMU7iIjQfARg", bi: "21133979", tw: "", name: "大神ミオ", tag: "#ミオかわいい"},
+            miko:       {yt: "UC-hM6YJuNYVAmUWxeIr9FeA", bi: "21144047", tw: "", name: "さくらみこ", tag: "#みこなま"},
+            korone:     {yt: "UChAnqc_AY5_I3Px5dig3X1Q", bi: "21421141", tw: "", name: "戌神ころね", tag: "#生神もんざえもん"},
+            okayu:      {yt: "UCvaTdHTWBGv3MKj3KVqJVCw", bi: "21420932", tw: "", name: "猫又おかゆ", tag: "#生おかゆ"},
+            azki:       {yt: "UC0TXe_LYZ4scaW2XMyi5_kw", bi: "21267062", tw: "", name: "AZKi", tag: "#AZKi生放送・#あずきんち"},
+            suisei:     {yt: "UC5CwaMl1eIgY8h02uZw7u8A", bi: "190577", tw: "", name: "星街すいせい", tag: "#ほしまちすたじお"},
+            pekora:     {yt: "UC1DCedRgGHBdm81E1llLhOQ", bi: "21560356", tw: "", name: "兎田ぺこら", tag: "#ぺこらいぶ"},
+            rushia:     {yt: "UCl_gCybOJRIgOXw6Qb4qJzQ", bi: "21545232", tw: "", name: "潤羽るしあ", tag: "#るしあらいぶ"},
+            flare:      {yt: "UCvInZx9h3jC2JzsIzoOebWg", bi: "21572617", tw: "", name: "不知火フレア", tag: "#フレアストリーム"},
+            noel:       {yt: "UCdyqAaZDKHXg4Ahi7VENThQ", bi: "21583736", tw: "", name: "白銀ノエル", tag: "#ノエルーム"},
+            marine:     {yt: "UCCzUftO8KOVkV4wQG1vkUvg", bi: "21584153", tw: "", name: "宝鐘マリン", tag: "#マリン航海記"},
+            kanata:     {yt: "UCZlDXzGoo7d44bwdNObFacg", bi: "21752681", tw: "", name: "天音かなた", tag: "#天界学園放送部"},
+            coco:       {yt: "UCS9uQI-jC3DE0L4IpXyvr6w", bi: "21752686", tw: "", name: "桐生ココ", tag: "#ココここ"},
+            watame:     {yt: "UCqm3BQLlJfvkTsX_hvm0UmA", bi: "21752694", tw: "", name: "角巻わため", tag: "#ドドドライブ"},
+            towa:       {yt: "UC1uv2Oq6kNxgATlCiez59hw", bi: "21752710", tw: "", name: "常闇トワ", tag: "#トワイライヴ"},
+            luna:       {yt: "UCa9Y57gfeY0Zro_noHRVrnw", bi: "21752719", tw: "", name: "姫森ルーナ", tag: "#なのらいぶ"},
+            lamy:       {yt: "UCFKOVgVbGmX65RxO3EtH3iw", bi: "", tw: "", name: "雪花ラミィ", tag: "#らみらいぶ"},
+            nene:       {yt: "UCAWSyEs_Io8MtpY3m-zqILA", bi: "", tw: "", name: "桃鈴ねね", tag: "#ねねいろらいぶ"},
+            botan:      {yt: "UCUKD-uaobj9jiqB-VXt71mA", bi: "", tw: "", name: "獅白ぼたん", tag: "#ぐうたらいぶ"},
+            aloe:       {yt: "UCgZuwn-O7Szh9cAgHqJ6vjw", bi: "", tw: "", name: "魔乃アロエ", tag: "#魔のらいぶ"},
+            polka:      {yt: "UCK9V2B22uJYu3N7eR_BT9QA", bi: "", tw: "", name: "尾丸ポルカ", tag: "#ポルカ公演中"},
+            laplus:     {yt: "UCENwRMx5Yh42zWpzURebzTw", bi:"", tw: "", name: "ラプラス・ダークネス", tag: ""},
+            lui:        {yt: "UCs9_O1tRPMQTHQ-N_L6FU2g", bi:"", tw: "", name: "鷹嶺ルイ", tag: ""},
+            koyori:     {yt: "UC6eWCld0KwmyHFbAqK3V-Rw", bi:"", tw: "", name: "博衣こより", tag: ""},
+            chloe:      {yt: "UCIBY1ollUsauvVi4hW4cumw", bi:"", tw: "", name: "沙花叉クロヱ", tag: ""},
+            iroha:      {yt: "UC_vMYWcDjmfdpH6r4TTn1MQ", bi:"", tw: "", name: "風真いろは", tag: ""},
 
-            calliope:	{yt: "UCL_qhgtOy0dy1Agp8vkySQg", bi:"", tw:"", name: "Mori Calliope", tag: ""},
-            kiara:		{yt: "UCHsx4Hqa-1ORjQTh9TYDhww", bi:"", tw:"", name: "Takanashi Kiara", tag: ""},
-            inanis:		{yt: "UCMwGHR0BTZuLsmjY_NT5Pwg", bi:"", tw:"", name: "Ninomae Ina'nis", tag: ""},
-            gura:		{yt: "UCoSrY_IQQVpmIRZ9Xf-y93g", bi:"", tw:"", name: "Gawr Gura", tag: ""},
-            amelia:		{yt: "UCyl1z3jo3XHR1riLFKG5UAg", bi:"", tw:"", name: "Watson Amelia", tag: ""},
-            irys:		{yt: "UC8rcEBzJSleTkf_-agPM20g", bi:"", tw:"", name: "IRyS", tag: ""},
-            sana:		{yt: "UCsUj0dszADCGbF3gNrQEuSQ", bi:"", tw:"", name: "Tsukumo Sana", tag: ""},
-            fauna:		{yt: "UCO_aKKYxn4tvrqPjcTzZ6EQ", bi:"", tw:"", name: "Ceres Fauna", tag: ""},
-            kronii:		{yt: "UCmbs8T6MWqUHP1tIQvSgKrg", bi:"", tw:"", name: "Ouro Kronii", tag: ""},
-            mumei:		{yt: "UC3n5uGu18FoCy23ggWWp8tA", bi:"", tw:"", name: "Nanashi Mumei", tag: ""},
-            hakos:		{yt: "UCgmPnx-EEeOrZSg5Tiw7ZRQ", bi:"", tw:"", name: "Hakos Baelz", tag: ""},
-            english:	{yt: "UCotXwY6s8pWmuWd_snKYjhg", bi:"", tw:"", name: "hololive English", tag: ""},
+            risu:       {yt: "UCOyYb1c43VlX9rc_lT6NKQw", bi:"", tw:"", name: "Ayunda Risu", tag: ""},
+            moona:      {yt: "UCP0BspO_AMEe3aQqqpo89Dg", bi:"", tw:"", name: "Moona Hoshinova", tag: ""},
+            iofi:       {yt: "UCAoy6rzhSf4ydcYjJw3WoVg", bi:"", tw:"", name: "Airani Iofifteen", tag: ""},
+            ollie:      {yt: "UCYz_5n-uDuChHtLo7My1HnQ", bi:"", tw:"", name: "Kureiji Ollie", tag: ""},
+            anya:       {yt: "UC727SQYUvx5pDDGQpTICNWg", bi:"", tw:"", name: "Anya Melfissa", tag: ""},
+            reine:      {yt: "UChgTyjG-pdNvxxhdsXfHQ5Q", bi:"", tw:"", name: "Pavolia Reine", tag: ""},
+            zeta:       {yt: "UCTvHWSfBZgtxE4sILOaurIQ", bi:"", tw:"", name: "Vestia Zeta", tag: ""},
+            kaela:      {yt: "UCZLZ8Jjx_RN2CXloOmgTHVg", bi:"", tw:"", name: "Kaela Kovalskia", tag: ""},
+            kobo:       {yt: "UCjLEmnpCNeisMxy134KPwWw", bi:"", tw:"", name: "Kobo Kanaeru", tag: ""},
+            indonesia:  {yt: "UCfrWoRGlawPQDQxxeIDRP0Q", bi:"", tw:"", name: "hololive Indonesia",tag: ""},
 
-            ankimo:		{yt: "UCGSOfFtVCTBfmGxHK5OD8ag", bi: "", tw: "", name: "あん肝", tag: "#あん肝"},
+            calliope:   {yt: "UCL_qhgtOy0dy1Agp8vkySQg", bi:"", tw:"", name: "Mori Calliope", tag: ""},
+            kiara:      {yt: "UCHsx4Hqa-1ORjQTh9TYDhww", bi:"", tw:"", name: "Takanashi Kiara", tag: ""},
+            inanis:     {yt: "UCMwGHR0BTZuLsmjY_NT5Pwg", bi:"", tw:"", name: "Ninomae Ina'nis", tag: ""},
+            gura:       {yt: "UCoSrY_IQQVpmIRZ9Xf-y93g", bi:"", tw:"", name: "Gawr Gura", tag: ""},
+            amelia:     {yt: "UCyl1z3jo3XHR1riLFKG5UAg", bi:"", tw:"", name: "Watson Amelia", tag: ""},
+            irys:       {yt: "UC8rcEBzJSleTkf_-agPM20g", bi:"", tw:"", name: "IRyS", tag: ""},
+            sana:       {yt: "UCsUj0dszADCGbF3gNrQEuSQ", bi:"", tw:"", name: "Tsukumo Sana", tag: ""},
+            fauna:      {yt: "UCO_aKKYxn4tvrqPjcTzZ6EQ", bi:"", tw:"", name: "Ceres Fauna", tag: ""},
+            kronii:     {yt: "UCmbs8T6MWqUHP1tIQvSgKrg", bi:"", tw:"", name: "Ouro Kronii", tag: ""},
+            mumei:      {yt: "UC3n5uGu18FoCy23ggWWp8tA", bi:"", tw:"", name: "Nanashi Mumei", tag: ""},
+            hakos:      {yt: "UCgmPnx-EEeOrZSg5Tiw7ZRQ", bi:"", tw:"", name: "Hakos Baelz", tag: ""},
+            english:    {yt: "UCotXwY6s8pWmuWd_snKYjhg", bi:"", tw:"", name: "hololive English", tag: ""},
 
-            chocosub:	{yt: "UCp3tgHXw_HI0QMk1K8qh3gQ", bi: "", tw: "", name: "ちょこSub", tag: "#癒月診療所"},
-            //	gamer:		{name: "ホロライブゲーマーズ"},
-            holo:		{yt: "UCJFZiqLMntJufDCHc6bQixg", bi: "8982686", tw: "", name: "ホロライブ公式", tag: "#ホロライブ"}
+            ankimo:     {yt: "UCGSOfFtVCTBfmGxHK5OD8ag", bi: "", tw: "", name: "あん肝", tag: "#あん肝"},
+
+            chocosub:   {yt: "UCp3tgHXw_HI0QMk1K8qh3gQ", bi: "", tw: "", name: "ちょこSub", tag: "#癒月診療所"},
+            //  gamer:      {name: "ホロライブゲーマーズ"},
+            holo:       {yt: "UCJFZiqLMntJufDCHc6bQixg", bi: "8982686", tw: "", name: "ホロライブ公式", tag: "#ホロライブ"}
         };
-    } else if (wiki_id === "siroyoutuber") {
-        return {
+    } else if (this.wikiId === "siroyoutuber") {
+        this.membersData = {
             chieri:     { yt: "UCP9ZgeIJ3Ri9En69R0kJc9Q", tw: "chieri_kakyoin", ml: "10596504", name: "花京院ちえり", tag: "#花京院ちえり" },
             dot:        { yt: "UCAZ_LA7f0sjuZ1Ni8L2uITw", tw: "dotLIVEyoutuber", name: ".LIVE", tag: "#どっとライブ" },
             iori:       { yt: "UCyb-cllCkMREr9de-hoiDrg", tw: "YamatoIori", ml: "10596535", name: "ヤマトイオリ", tag: "#ヤマトイオリ" },
@@ -1200,8 +1304,23 @@ function initMembersData() {
             rururica:   { yt: "UCcd4MSYH7bPIBEUqmBgSZQw", tw: "Rururica_VTuber", name: "ルルンルルリカ", tag: "#ルルンルーム" },
             radio:      { yt: "UCMzxQ58QL4NNbWghGymtHvw", tw: "carro_pino", name: "カルロピノ", tag: "#とりとらじお" },
         };
+    } else {
+        this.membersData = null;
     }
-    return null;
-}
+} // initMembersData
+
+////
+// その他
+////
+
+// Wiki文法の記号類を実体参照に変換
+static escapeWikiComponents(text) {
+    return text.replace(/[#!%&'()*+,.:=>@[\]\^_|~-]/g, (v)=>("&#" + v.codePointAt(0) + ";"));
+} // escapeWikiComponents
+
+} // class WikiExtension
+
+// Wiki拡張を適用
+window.wikiExtension = new WikiExtension();
 
 })();
