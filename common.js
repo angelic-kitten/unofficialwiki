@@ -66,7 +66,7 @@ setup() {
 
     } else if (this.pageType === "edit") {
         // PC版のみ適用
-        if (this.isExperimentalEnabled && !this.isMobileLayout) {
+        if (!this.isMobileLayout) {
             this.setupEditingTools();
             this.setupSyntaxChecker();
         }
