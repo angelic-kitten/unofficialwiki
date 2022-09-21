@@ -78,7 +78,7 @@ if (is_article_page) {
 
 } else if (is_edit_page) {
     // PC版のみ適用
-    if (is_experimental_enabled && !mobile_layout) {
+    if (!mobile_layout) {
         window.addEventListener("DOMContentLoaded", function() {
             setupEditingTools();
             setupSyntaxChecker();
