@@ -614,7 +614,8 @@ setupEditingTools() {
         addSimpleProcessor("liveeurl", "YouTube配信リンク", (text)=>{
             for (const key in this.membersData) {
                 const reftag = `[[${this.membersData[key].name}>>https://www.youtube.com/channel/${this.membersData[key].yt}/live]]`;
-                text = text.replaceAll(this.membersData[key].name, reftag);
+                // text = text.replaceAll(this.membersData[key].name, reftag);
+                text = text.split(this.membersData[key].name).join(reftag);
             }
             return text;
         }, (
