@@ -1040,6 +1040,9 @@ setupSyntaxChecker() {
                 while ((match = pattern.exec(text)) !== null) {
                     line.anchors.push(match[1]);
                 }
+                if (line.anchors.length == 0) {
+                    line.anchors = null;
+                }
             }
         }
 
