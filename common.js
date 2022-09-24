@@ -66,7 +66,7 @@ setup() {
 
     } else if (this.pageType === "edit") {
         // PC版のみ適用
-        if (this.isExperimentalEnabled && !this.isMobileLayout) {
+        if (!this.isMobileLayout) {
             this.setupEditingTools();
             this.setupSyntaxChecker();
         }
@@ -568,8 +568,8 @@ setupEditingTools() {
         // 日本語向けに簡易判定
         const char = /(?:[0-9A-Za-z_]|(?![\u3000-\u3002\u3004\u3007-\u301b\uff01-\uff0f\uff1a-\uff1f\uff3b-\uff40\uff5b-\uff65])[^\x00-\x7f])/;
         // [[リンク]] と URL を回避
-        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9a-z\!\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\=\?\@\_\~]+)/i;
-        const pattern = new RegExp(`${avoid.source}|(?<!&(?=#[0-9A-Za-z]+;)|${char.source})[#＃](${char.source}+)`, "ig");
+        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9A-Za-z\!\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\=\?\@\_\~]+|&#[0-9A-Za-z]+;|${char.source})/;
+        const pattern = new RegExp(`${avoid.source}|[#＃](${char.source}+)`, "g");
         text = text.replace(pattern, (orig, tag)=>{
             if (!tag) return orig;
             if (!/[^0-9_]/.test(tag)) return orig;
@@ -614,7 +614,8 @@ setupEditingTools() {
         addSimpleProcessor("liveeurl", "YouTube配信リンク", (text)=>{
             for (const key in this.membersData) {
                 const reftag = `[[${this.membersData[key].name}>>https://www.youtube.com/channel/${this.membersData[key].yt}/live]]`;
-                text = text.replaceAll(this.membersData[key].name, reftag);
+                // text = text.replaceAll(members_data[key].name, reftag);
+                text = text.split(members_data[key].name).join(reftag);
             }
             return text;
         }, (
@@ -810,7 +811,9 @@ setupEditingTools() {
         const tool_menu = tools_area.querySelector("ul.tool-menu");
         const tool_box = tools_area.querySelector(".tool-box");
 
-        for (const menu_item of tool_menu.childNodes) {
+        // for (const menu_item of tool_menu.childNodes) {
+        for (let i = 0, nodes = tool_menu.childNodes; i < nodes.length; i++) {
+            const menu_item = nodes[i];
             if (menu_item.dataset.toolName === name) {
                 menu_item.addClassName("active");
             } else {
@@ -818,7 +821,9 @@ setupEditingTools() {
             }
         }
 
-        for (const tool_content of tool_box.childNodes) {
+        // for (const tool_content of tool_box.childNodes) {
+        for (let i = 0, nodes = tool_box.childNodes; i < nodes.length; i++) {
+            const tool_content = nodes[i];
             if (tool_content.dataset.toolName === name) {
                 tool_content.addClassName("show");
             } else {
@@ -1027,7 +1032,14 @@ setupSyntaxChecker() {
                 line.type = "heading";
             }
             if (!state.incode && !text.startsWith("//")) {
-                line.anchors = text.match(/(?<=&aname\()[^\)]*(?=\))/g);
+                // XXX: look-behind is not supported
+                // line.anchors = text.match(/(?<=&aname\()[^\)]*(?=\))/g);
+                line.anchors = [];
+                const pattern = /&aname\(([^\)]*)\)/g;
+                let match;
+                while ((match = pattern.exec(text)) !== null) {
+                    line.anchors.push(match[1]);
+                }
             }
         }
 
