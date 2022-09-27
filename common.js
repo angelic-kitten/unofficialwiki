@@ -16,7 +16,7 @@ class WikiExtension {
 ////
 
 constructor() {
-    this.readyState = "initializing";
+    this.updateReadyState("initializing");
     if (document.readyState === "loading") {
         document.addEventListener("readystatechange", (e)=>{
             if (document.readyState === "interactive") {
@@ -37,7 +37,7 @@ init() {
     this.initPageInfo();
     this.initExperimental();
     this.initMembersData();
-    this.readyState = "initialized";
+    this.updateReadyState("initialized");
 
     const shouldStopBeforeSetup = !!localStorage.getItem("stop_before_setup");
     if (shouldStopBeforeSetup) {
@@ -72,9 +72,18 @@ setup() {
         }
     }
 
-    this.readyState = "setup";
+    this.updateReadyState("loaded");
     console.log("extension has applied.");
 } // setup
+
+// 状態を更新
+updateReadyState(name) {
+    this.readyState = name;
+    const event = new Event("extension-readystatechange");
+    event.wikiExtension = this;
+    event.readyState = this.readyState;
+    document.dispatchEvent(event);
+}
 
 // ページ情報を確認
 initPageInfo() {
