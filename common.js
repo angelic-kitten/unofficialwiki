@@ -695,13 +695,19 @@ setupEditingTools() {
           .tools-area .tool-box {
             flex: auto;
             border: 1px solid lightgray;
+            display: flex;
+            flex-direction: column;
           }
           .tools-area .tool-box > .tool-content {
-            height: 100%;
             display: none;
+            flex: auto;
           }
           .tools-area .tool-box > .tool-content.show {
             display: block;
+          }
+          .tools-area .tool-box > .tool-content.flex.show {
+            display: flex;
+            flex-direction: column;
           }
           .tools-area .tool-content textarea {
             box-sizing: border-box;
@@ -790,9 +796,9 @@ setupEditingTools() {
     function addSimpleProcessor(name, label, process, placeholder) {
         addTool(name, label, function() {
             const wrapper = document.createElement("div");
+            wrapper.style.flex = "auto";
             wrapper.style.display = "flex";
             wrapper.style.flexDirection = "column";
-            wrapper.style.height = "100%";
             wrapper.style.alignItems = "start";
 
             const process_btn = document.createElement("button");
@@ -812,6 +818,7 @@ setupEditingTools() {
                 textbox.value = process(textbox.value);
             });
 
+            this.addClassName("flex");
             this.appendChild(wrapper);
         });
     }
