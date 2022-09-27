@@ -279,22 +279,63 @@ setupScrollableTable() {
 setupSongListConverter() {
 
     const title = document.title;
+    const boxes = {};
 
-    if (title.includes("編集用_入力補助ツール")) {
-        window.setInterval(convertSongList.bind(this), 1000);
+    initSongListConverter.call(this);
+
+    function initSongListConverter() {
+        const userArea = document.querySelector("div.user-area");
+        // 見出しを基準にする。見つからなければ適用なし
+        const headings = userArea.querySelectorAll("div.title-1");
+        let converterHeading;
+        for (const heading of headings) {
+            const text = heading.textContent;
+            // ホロライブ、どっとライブ、もちぷろ、のりプロ
+            if (text.match("歌リスト変換書き換え簡略版")) {
+                converterHeading = heading;
+                break;
+            }
+        }
+        if (!converterHeading) {
+            return;
+        }
+
+        // 基準の見出し以降からテキストボックスを8つ見つける。見つからなければ適用なし
+        const textareas = userArea.querySelectorAll("textarea.PLAIN-BOX");
+        let firstBoxIndex = -1;
+        for (let i = 0; i < textareas.length; i++) {
+            const textarea = textareas[i];
+            if (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0) {
+                firstBoxIndex = i;
+                break;
+            }
+        }
+        if (firstBoxIndex < 0 || firstBoxIndex + 7 >= textareas.length) {
+            return;
+        }
+
+        boxes.name = textareas[firstBoxIndex];
+        boxes.roman = textareas[firstBoxIndex + 1];
+        boxes.date = textareas[firstBoxIndex + 2];
+        boxes.cast = textareas[firstBoxIndex + 3];
+        boxes.url = textareas[firstBoxIndex + 4];
+        boxes.songs = textareas[firstBoxIndex + 5];
+        boxes.castOut = textareas[firstBoxIndex + 6];
+        boxes.songsOut = textareas[firstBoxIndex + 7];
+
+        if (title.includes("編集用_入力補助ツール")) {
+            window.setInterval(convertSongList.bind(this), 1000);
+        }
     }
 
-    //歌唱楽曲リスト変換
-    //textArea[0-7]を使用
-    //入力0-5→出力6,7
+    // 歌唱楽曲リスト変換処理
     function convertSongList() {
-        const textboxes = document.getElementsByClassName("PLAIN-BOX");
-        const name = textboxes[0].value.replace(/\n/g, "");
-        const roman = textboxes[1].value.replace(/\n/g, "");
-        const dateSlash = textboxes[2].value.replace(/\n/g, "");
-        const castTitle = textboxes[3].value.replace(/\n/g, "");
-        const url = textboxes[4].value.replace(/\n/g, "");
-        const songs = textboxes[5].value.split("\n");
+        const name = boxes.name.value.replace(/\n/g, "");
+        const roman = boxes.roman.value.replace(/\n/g, "");
+        const dateSlash = boxes.date.value.replace(/\n/g, "");
+        const castTitle = boxes.cast.value.replace(/\n/g, "");
+        const url = boxes.url.value.replace(/\n/g, "");
+        const songs = boxes.songs.value.split("\n");
         const datePlain = dateSlash.replace(/\//g, "");
         const dateDot = dateSlash.replace(/\//g, ".");
         const castAnchor = roman + datePlain;
@@ -334,12 +375,12 @@ setupSongListConverter() {
                 break;
         }
 
-        textboxes[6].value = "|"+castRow.join("|")+"|";
-        textboxes[7].value = songRows.join("\n");
+        boxes.castOut.value = "|"+castRow.join("|")+"|";
+        boxes.songsOut.value = songRows.join("\n");
 
-        textboxes[6].readOnly = true;
-        textboxes[7].readOnly = true;
-    };
+        boxes.castOut.readOnly = true;
+        boxes.songsOut.readOnly = true;
+    }
 
 } // setupSongListConverter
 
@@ -349,28 +390,62 @@ setupSongListConverter() {
 
 setupRegexReplacer() {
 
+    const boxes = {};
+
     initRegexReplacer();
 
     function initRegexReplacer() {
-        let links = document.querySelectorAll('a');
-        links.forEach(function(link) {
-            if (link.getAttribute("href") == "#regreplace") {
-                link.addEventListener('click', regReplace, false);
+        const userArea = document.querySelector("div.user-area");
+        // 見出しを基準にする。見つからなければ適用なし
+        const headings = userArea.querySelectorAll("div.title-1");
+        let converterHeading;
+        for (const heading of headings) {
+            const text = heading.textContent;
+            // ホロライブ、どっとライブ、もちぷろ
+            if (text.match("正規表現置換")) {
+                converterHeading = heading;
+                break;
             }
-        });
+        }
+        if (!converterHeading) {
+            return;
+        }
+
+        // 基準の見出し以降からテキストボックスを4つ見つける。見つからなければ適用なし
+        const textareas = userArea.querySelectorAll("textarea.PLAIN-BOX");
+        let firstBoxIndex = -1;
+        for (let i = 0; i < textareas.length; i++) {
+            const textarea = textareas[i];
+            if (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0) {
+                firstBoxIndex = i;
+                break;
+            }
+        }
+        if (firstBoxIndex < 0 || firstBoxIndex + 3 >= textareas.length) {
+            return;
+        }
+
+        boxes.before = textareas[firstBoxIndex];
+        boxes.pattern = textareas[firstBoxIndex + 1];
+        boxes.replacement = textareas[firstBoxIndex + 2];
+        boxes.after = textareas[firstBoxIndex + 3];
+
+        const links = userArea.querySelectorAll("a");
+        for (const link of links) {
+            if (link.getAttribute("href") == "#regreplace") {
+                link.addEventListener("click", regReplace, false);
+            }
+        }
     }
 
-    //正規表現変換
-    //textArea[8-11]を使用
-    //入力8-10→出力11
+    // 正規表現変換処理
     function regReplace(e) {
         e.preventDefault();
-        const textArea = document.getElementsByClassName("PLAIN-BOX");
-        let text = textArea[8].value;
-        const pattern = textArea[9].value.replace(/\n$/, "");
-        const replacement = textArea[10].value.replace(/\n$/, "");
+        let text = boxes.before.value;
+        const pattern = boxes.pattern.value.replace(/\n$/, "");
+        const replacement = boxes.replacement.value.replace(/\n$/, "");
         text = text.replace(new RegExp(pattern, 'g'), replacement);
-        textArea[11].value = text;
+        boxes.after.value = text;
     }
 
 } // setupRegexReplacer
@@ -1350,6 +1425,27 @@ initMembersData() {
 static escapeWikiComponents(text) {
     return text.replace(/[#!%&'()*+,.:=>@[\]\^_|~-]/g, (v)=>("&#" + v.codePointAt(0) + ";"));
 } // escapeWikiComponents
+
+// 要素の順番を比較する
+static compareNodeOrder(e1, e2) {
+    const path1 = [];
+    for (let e = e1.parentElement; e; e = e.parentElement) {
+        path1.unshift(e);
+    }
+    for (let p2 = e2; p2; p2 = p2.parentElement) {
+        const commonAncestor = p2.parentElement;
+        if (path1.includes(commonAncestor)) {
+            const p1 = path1[path1.indexOf(commonAncestor) + 1];
+            if (!p1) break;
+            const childNodes = [...commonAncestor.childNodes];
+            const i1 = childNodes.indexOf(p1);
+            const i2 = childNodes.indexOf(p2);
+            if (i1 == -1 || i2 == -1 || i1 == i2) break;
+            return i1 < i2 ? -1 : 1;
+        }
+    }
+    return 0;
+} // compareNodeOrder
 
 } // class WikiExtension
 
