@@ -363,12 +363,14 @@ setupRegexReplacer() {
     //正規表現変換
     //textArea[8-11]を使用
     //入力8-10→出力11
-    function regReplace() {
-        let textArea = document.getElementsByClassName("PLAIN-BOX");
-        let pattern = textArea[9].value;
-        let convert = textArea[10].value;
-        let after = textArea[8].value.replace(new RegExp(pattern,'g'),convert);
-        textArea[11].value = after;
+    function regReplace(e) {
+        e.preventDefault();
+        const textArea = document.getElementsByClassName("PLAIN-BOX");
+        let text = textArea[8].value;
+        const pattern = textArea[9].value.replace(/\n$/, "");
+        const replacement = textArea[10].value.replace(/\n$/, "");
+        text = text.replace(new RegExp(pattern, 'g'), replacement);
+        textArea[11].value = text;
     }
 
 } // setupRegexReplacer
