@@ -632,21 +632,21 @@ setupEditingTools () {
             if (url && url.hostname === 'twitter.com') {
                 const pathArr = url.pathname.split('/')
                 const index = pathArr.findIndex(v => v === 'status')
-                return `&twitter(${pathArr[index + 1]})\n` +
-                       '----注釈版----\n' +
-                       `((Twitter [[@${pathArr[index - 1]}>>${url}]]))`
+                if (index >= 0) {
+                    return `&twitter(${pathArr[index + 1]})\n` +
+                        `((Twitter [[@${pathArr[index - 1]}>>${url}]]))`
+                }
             }
-            return false
-        }).filter(Boolean).join('\n\n')
+            return line
+        }).filter(Boolean).join('\n')
         if (text) text += '\n'
         return text
     }, (
-        `ツイートURLからwikiタグ2種に変換する
+        `ツイートURLからwikiタグ2種に変換する (1行＝1 URL)
 
         https://twitter.com/tokino_sora/status/1567175591358787585
         ↓↓↓
         &twitter(1567175591358787585)
-        ----注釈版----
         ((Twitter [[@tokino_sora>>https://twitter.com/tokino_sora/status/1567175591358787585]]))`.replace(/^[ \t]+/gm, '')
     ))
 
@@ -666,9 +666,9 @@ setupEditingTools () {
     }, (
         `テキスト中のTwitterハッシュタグに自動でリンクを張る
 
-        ハッシュタグ「#ホロライブ」でツイート
+        ハッシュタグ「#初配信」でツイート
         ↓↓↓
-        ハッシュタグ「[[&#35;ホロライブ>>https://twitter.com/hashtag/%E3%83%9B%E3%83%AD%E3%83%A9%E3%82%A4%E3%83%96]]」でツイート`.replace(/^[ \t]+/gm, '')
+        ハッシュタグ「[[&#35;初配信>>https://twitter.com/hashtag/%E5%88%9D%E9%85%8D%E4%BF%A1]]」でツイート`.replace(/^[ \t]+/gm, '')
     ))
 
     addSimpleProcessor('videolist', '動画サムネ付きリンク', (text) => {
@@ -683,12 +683,12 @@ setupEditingTools () {
             if (vid) {
                 return `[[&ref(https://i.ytimg.com/vi/${vid}/mqdefault.jpg,100%)>>https://youtu.be/${vid}]]`
             }
-            return false
+            return line
         }).filter(Boolean).join('\n')
         if (text) text += '\n'
         return text
     }, (
-        `YouTubeの動画URLをサムネ付きタグに変換する(動画一覧用加工)
+        `YouTubeの動画URLをサムネ付きタグに変換する (動画一覧用加工、1行＝1 URL)
 
         https://www.youtube.com/watch?v=TjGC7Jzc5ns
         https://youtu.be/TjGC7Jzc5ns
