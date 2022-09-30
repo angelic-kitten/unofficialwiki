@@ -653,9 +653,9 @@ setupEditingTools () {
     addSimpleProcessor('hashtag', 'ハッシュタグリンク', (text) => {
         // 日本語向けに簡易判定
         const char = /(?:[0-9A-Za-z_]|(?![\u3000-\u3002\u3004\u3007-\u301b\uff01-\uff0f\uff1a-\uff1f\uff3b-\uff40\uff5b-\uff65])[^\x00-\x7f])/
-        // [[リンク]] と URL を回避
-        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9A-Za-z!#$%&'()*+,\-./:;=?@_~]+|&#[0-9A-Za-z]+;|${char.source})/
-        const pattern = new RegExp(`${avoid.source}|[#＃](${char.source}+)`, 'g')
+        // URLや [[リンク]] などの一部文法を回避
+        const avoid = /(?:\[\[.*?\]\]|https?:\/\/[0-9A-Za-z!#$%&'()*+,\-./:;=?@_~]+|&#[0-9A-Za-z]+;|&color\([^)]*\)|\|(?:bg)?color\([^)]*\):|${char.source})/
+        const pattern = new RegExp(`${avoid.source}|[#＃](${char.source}+)`, 'gi')
         text = text.replace(pattern, (orig, tag) => {
             if (!tag) return orig
             if (!/[^0-9_]/.test(tag)) return orig
