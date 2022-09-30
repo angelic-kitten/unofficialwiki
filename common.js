@@ -36,6 +36,7 @@ init () {
 
     this.initPageInfo()
     this.initExperimental()
+    this.initCustomHashParams()
     this.initMembersData()
     this.updateReadyState('initialized')
 
@@ -162,6 +163,85 @@ initExperimental () {
     })
     checkExperimental()
 } // initExperimental
+
+//----------
+// URLパラメータとアンカージャンプ
+//----------
+
+initCustomHashParams () {
+
+    // パラメータ収集
+    const parseParams = (urlStr) => {
+        const url = new URL(urlStr)
+        const params = new MyURLSearchParams(url.search)
+        let hash = url.hash
+
+        const sep = hash.indexOf('?')
+        if (sep > -1) {
+            const search = hash.substring(sep)
+            const hashParams = new MyURLSearchParams(search)
+            hashParams.forEach((val, key) => {
+                params.set(key, val)
+            })
+            hash = hash.substring(0, sep)
+        }
+
+        params.freeze()
+
+        return [params, hash]
+    }
+
+    // 情報更新＆イベント発火
+    const updateParams = (params, hash, trigger) => {
+        this.urlParams = params
+        this.urlHash = hash
+
+        if (trigger) {
+            const event = new Event('extension-paramchange')
+            event.params = params
+            event.hash = hash
+            window.dispatchEvent(event)
+        }
+    }
+
+    // アンカージャンプ
+    const jumpToAnchor = (aname) => {
+        const anchor = document.getElementById(aname) || Array.prototype.find.call(document.querySelectorAll('a[name]'), (el) => (el.name === aname))
+        if (anchor) {
+            // anchor.scrollIntoView();
+            window.scrollTo(0, anchor.offsetTop - 40)
+        }
+    }
+
+    // hashが変わった時に情報更新＆イベントを発火
+    window.addEventListener('hashchange', (e) => {
+        const [params, hash] = parseParams(e.newURL)
+        updateParams(params, hash, true)
+    })
+
+    // hashが変わった時に本来のアンカージャンプを実行
+    window.addEventListener('extension-paramchange', (e) => {
+        if (e.hash.length > 1) {
+            const aname = e.hash.substring(1)
+            jumpToAnchor(aname)
+        }
+    })
+
+    // ページ読み込み時に初回処理
+    {
+        const [params, hash] = parseParams(location.href)
+        updateParams(params, hash, false)
+    }
+
+    // ページ読み込み時に初回ジャンプ
+    document.addEventListener('DOMContentLoaded', () => {
+        if (this.urlHash.length > 1 && this.urlHash !== location.hash) {
+            const aname = this.urlHash.substring(1)
+            jumpToAnchor(aname)
+        }
+    })
+
+} // initCustomHashParams
 
 //----------
 // ストライプ表示機能 class="stripe" (記事画面)
@@ -444,8 +524,6 @@ setupAutoFilter () {
 
     function applyFilters () {
         const title = document.title
-        const params = getParams(true)
-        const keyword = params.get('keyword')
 
         // どっとライブ
         if (this.wikiId === 'siroyoutuber') {
@@ -475,17 +553,17 @@ setupAutoFilter () {
         // wiki別分岐終了
 
         // すべてのページ
+        const keyword = this.urlParams.get('keyword')
         if (keyword) {
-            const order = params.get('order') || 0
+            const order = this.urlParams.get('order') || 0
             applyFilter(order, keyword)
         }
     }
 
-    window.addEventListener('hashchange', function () {
-        const params = getParams(true)
-        const keyword = params.get('keyword')
+    window.addEventListener('extension-paramchange', (e) => {
+        const keyword = e.params.get('keyword')
         if (keyword) {
-            const order = params.get('order') || 0
+            const order = e.params.get('order') || 0
             applyFilter(order, keyword)
         }
     }, false)
@@ -500,31 +578,6 @@ setupAutoFilter () {
         }
     }
 
-    function getParams (jump_to_anchor) {
-        const url = new URL(window.location.href)
-        const hash = url.hash
-        const params = url.searchParams || new MyURLSearchParams(url.search)
-
-        const sep = hash.indexOf('?')
-        if (sep > -1) {
-            const search = hash.substring(sep)
-            const hashParams = new (window.URLSearchParams || MyURLSearchParams)(search)
-            hashParams.forEach((val, key) => {
-                params.set(key, val)
-            })
-            const aname = hash.substring(1, sep)
-            if (aname && jump_to_anchor) {
-                const anchor = document.getElementById(aname) || [...document.querySelectorAll('a[name]')].find((e) => (e.name === aname))
-                if (anchor) {
-                    // anchor.scrollIntoView();
-                    window.scrollTo(0, anchor.offsetTop - 40)
-                }
-            }
-        }
-
-        return params
-    }
-
 } // setupAutoFilter
 
 //----------
@@ -537,24 +590,28 @@ setupTableFilterGenerator () {
     window.createFilterSearch = createFilterSearch
 
     function createFilterSearch () {
-        const url = new URL(window.location.href.split('#')[0])
-        const params = url.searchParams || new MyURLSearchParams(url.search)
-        params.delete('keyword')
-        params.delete('order')
-        let j = 0
-
-        const elements = document.getElementsByName('order')
-        const len = elements.length
-        for (let i = 0; i < len; i++) {
-            if (elements.item(i).checked) {
-                j = elements.item(i).value
-            }
-        }
-
-        const qry = document.getElementById(`table-filter-${j}`)
         const link = document.getElementById('freeAreaRegExp')
-        if (!qry) return
-        link.setAttribute('href', url + '?keyword=' + encodeURIComponent(qry.value) + '&order=' + j)
+        if (!link) return
+        const form = link.parentNode
+
+        const elements = form.querySelectorAll('input[name="order"]')
+        const checked = Array.prototype.find.call(elements, (radio) => radio.checked)
+        const order = (checked ? checked.value : 0)
+
+        const filterInput = document.getElementById(`table-filter-${order}`)
+        if (!filterInput) return
+
+        const url = new URL(location.href)
+        const searchParams = new MyURLSearchParams(url.search)
+        searchParams.delete('keyword')
+        searchParams.delete('order')
+        url.search = searchParams.toString()
+        const hashParams = new MyURLSearchParams()
+        hashParams.set('keyword', filterInput.value)
+        hashParams.set('order', order)
+        url.hash = '#' + hashParams.toString()
+
+        link.setAttribute('href', url)
     }
 
 } // setupTableFilterGenerator
@@ -1440,6 +1497,7 @@ class MyURLSearchParams {
 
     constructor (search) {
         this.params = {}
+        this._readOnly = false
         if (search == null) {
             return
         }
@@ -1465,10 +1523,16 @@ class MyURLSearchParams {
     }
 
     set (key, value) {
+        if (this._readOnly) {
+            throw new Error('read only param')
+        }
         this.params[key] = value
     }
 
     delete (key) {
+        if (this._readOnly) {
+            throw new Error('read only param')
+        }
         delete this.params[key]
     }
 
@@ -1476,6 +1540,20 @@ class MyURLSearchParams {
         for (const key in this.params) {
             fn(this.params[key], key)
         }
+    }
+
+    toString () {
+        const keys = Object.keys(this.params)
+        if (keys.length === 0) {
+            return ''
+        }
+        return '?' + keys.map((k) => {
+            return encodeURIComponent(k) + '=' + encodeURIComponent(this.params[k])
+        }).join('&')
+    }
+
+    freeze () {
+        this._readOnly = true
     }
 
 } // class MyURLSearchParams
