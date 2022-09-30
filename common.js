@@ -287,29 +287,20 @@ setupSongListConverter () {
         const userArea = document.querySelector('div.user-area')
         // 見出しを基準にする。見つからなければ適用なし
         const headings = userArea.querySelectorAll('div.title-1')
-        let converterHeading
-        for (const heading of headings) {
+        const converterHeading = Array.prototype.find.call(headings, (heading) => {
             const text = heading.textContent
-            // ホロライブ、どっとライブ、もちぷろ、のりプロ
-            if (text.match('歌リスト変換書き換え簡略版')) {
-                converterHeading = heading
-                break
-            }
-        }
+            // ホロライブ、どっとライブ、もちぷろ、のりプロ、しぐれうい
+            return text.match('歌リスト変換書き換え簡略版')
+        })
         if (!converterHeading) {
             return
         }
 
         // 基準の見出し以降からテキストボックスを8つ見つける。見つからなければ適用なし
         const textareas = userArea.querySelectorAll('textarea.PLAIN-BOX')
-        let firstBoxIndex = -1
-        for (let i = 0; i < textareas.length; i++) {
-            const textarea = textareas[i]
-            if (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0) {
-                firstBoxIndex = i
-                break
-            }
-        }
+        const firstBoxIndex = Array.prototype.findIndex.call(textareas, (textarea) => {
+            return (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0)
+        })
         if (firstBoxIndex < 0 || firstBoxIndex + 7 >= textareas.length) {
             return
         }
@@ -347,7 +338,8 @@ setupSongListConverter () {
         for (const songName of songs) {
             if (!songName) continue
             const escapedSongName = WikiExtension.escapeWikiComponents(songName)
-            const index = String(songRows.length + 1).padStart(3, '0')
+            // const index = String(songRows.length + 1).padStart(3, '0')
+            const index = ('00' + (songRows.length + 1)).slice(-3)
             const songRow = [
                 name,
                 `[[${dateDot}生>#${castAnchor}]]-${index}`,
@@ -398,29 +390,20 @@ setupRegexReplacer () {
         const userArea = document.querySelector('div.user-area')
         // 見出しを基準にする。見つからなければ適用なし
         const headings = userArea.querySelectorAll('div.title-1')
-        let converterHeading
-        for (const heading of headings) {
+        const converterHeading = Array.prototype.find.call(headings, (heading) => {
             const text = heading.textContent
-            // ホロライブ、どっとライブ、もちぷろ
-            if (text.match('正規表現置換')) {
-                converterHeading = heading
-                break
-            }
-        }
+            // ホロライブ、どっとライブ、もちぷろ、しぐれうい
+            return text.match('正規表現置換')
+        })
         if (!converterHeading) {
             return
         }
 
         // 基準の見出し以降からテキストボックスを4つ見つける。見つからなければ適用なし
         const textareas = userArea.querySelectorAll('textarea.PLAIN-BOX')
-        let firstBoxIndex = -1
-        for (let i = 0; i < textareas.length; i++) {
-            const textarea = textareas[i]
-            if (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0) {
-                firstBoxIndex = i
-                break
-            }
-        }
+        const firstBoxIndex = Array.prototype.findIndex.call(textareas, (textarea) => {
+            return (WikiExtension.compareNodeOrder(textarea, converterHeading) > 0)
+        })
         if (firstBoxIndex < 0 || firstBoxIndex + 3 >= textareas.length) {
             return
         }
@@ -431,7 +414,8 @@ setupRegexReplacer () {
         boxes.after = textareas[firstBoxIndex + 3]
 
         const links = userArea.querySelectorAll('a')
-        for (const link of links) {
+        // for (const link of links) {
+        for (const link of Array.from(links)) {
             if (link.getAttribute('href') === '#regreplace') {
                 link.addEventListener('click', regReplace, false)
             }
@@ -506,14 +490,25 @@ setupAutoFilter () {
         }
     }, false)
 
+    function applyFilter (indice, keyword) {
+        for (const idx of String(indice).split(',')) {
+            const table = $('table.filter').eq(idx)
+            const input = $(`#table-filter-${idx}`)
+            if (!input) return
+            table.addClass('regex')
+            input.val(keyword).change()
+        }
+    }
+
     function getParams (jump_to_anchor) {
         const url = new URL(window.location.href)
         const hash = url.hash
-        const params = url.searchParams
+        const params = url.searchParams || new MyURLSearchParams(url.search)
 
         const sep = hash.indexOf('?')
         if (sep > -1) {
-            const hashParams = new URLSearchParams(hash.substring(sep))
+            const search = hash.substring(sep)
+            const hashParams = new (window.URLSearchParams || MyURLSearchParams)(search)
             hashParams.forEach((val, key) => {
                 params.set(key, val)
             })
@@ -530,16 +525,6 @@ setupAutoFilter () {
         return params
     }
 
-    function applyFilter (indice, keyword) {
-        for (const idx of String(indice).split(',')) {
-            const table = $('table.filter').eq(idx)
-            const input = $(`#table-filter-${idx}`)
-            if (!input) return
-            table.addClass('regex')
-            input.val(keyword).change()
-        }
-    }
-
 } // setupAutoFilter
 
 //----------
@@ -553,7 +538,7 @@ setupTableFilterGenerator () {
 
     function createFilterSearch () {
         const url = new URL(window.location.href.split('#')[0])
-        const params = url.searchParams
+        const params = url.searchParams || new MyURLSearchParams(url.search)
         params.delete('keyword')
         params.delete('order')
         let j = 0
@@ -1433,12 +1418,12 @@ static compareNodeOrder (e1, e2) {
     for (let e = e1.parentElement; e; e = e.parentElement) {
         path1.unshift(e)
     }
-    for (let p2 = e2; p2; p2 = p2.parentElement) {
+    for (let p2 = e2; p2.parentElement; p2 = p2.parentElement) {
         const commonAncestor = p2.parentElement
         if (path1.includes(commonAncestor)) {
             const p1 = path1[path1.indexOf(commonAncestor) + 1]
             if (!p1) break
-            const childNodes = [...commonAncestor.childNodes]
+            const childNodes = Array.from(commonAncestor.childNodes)
             const i1 = childNodes.indexOf(p1)
             const i2 = childNodes.indexOf(p2)
             if (i1 === -1 || i2 === -1 || i1 === i2) break
@@ -1449,6 +1434,51 @@ static compareNodeOrder (e1, e2) {
 } // compareNodeOrder
 
 } // class WikiExtension
+
+// URLSearchParams に対応していないブラウザ用
+class MyURLSearchParams {
+
+    constructor (search) {
+        this.params = {}
+        if (search == null) {
+            return
+        }
+        if (search.startsWith('?')) {
+            search = search.substring(1)
+        }
+        for (const param of search.split('&')) {
+            const sep = param.indexOf('=')
+            let key = param
+            let value = ''
+            if (sep >= 0) {
+                key = param.substring(0, sep)
+                value = param.substring(sep + 1)
+            }
+            if (key) {
+                this.params[decodeURIComponent(key)] = decodeURIComponent(value)
+            }
+        }
+    }
+
+    get (key) {
+        return this.params[key]
+    }
+
+    set (key, value) {
+        this.params[key] = value
+    }
+
+    delete (key) {
+        delete this.params[key]
+    }
+
+    forEach (fn) {
+        for (const key in this.params) {
+            fn(this.params[key], key)
+        }
+    }
+
+} // class MyURLSearchParams
 
 // Wiki拡張を適用
 window.wikiExtension = new WikiExtension()
