@@ -738,6 +738,39 @@ setupEditingTools () {
         [[&ref(https://i.ytimg.com/vi/TjGC7Jzc5ns/mqdefault.jpg,100%)>>https://youtu.be/TjGC7Jzc5ns]]`.replace(/^[ \t]+/gm, '')
     ))
 
+    // https://amp.dev/ja/documentation/guides-and-tutorials/learn/amp-caches-and-cors/how_amp_pages_are_cached/
+    // https://amp.dev/ja/documentation/guides-and-tutorials/learn/amp-caches-and-cors/amp-cache-urls/
+    addSimpleProcessor('imgampcache', '画像軽量化', (text) => {
+        text = text.split(/[\r\n]+/).map((line) => {
+            const url = parseURL(line)
+            if (!(url && url.pathname.match(/(?:jpg|png|gif)$/i))) {
+                return line
+            }
+            let sub = url.hostname.replace(/-/g, '--').replace(/\./g, '-')
+            if (sub.substring(2, 4) === '--') {
+                sub = `0-${sub}-0`
+            }
+            if (url.hash !== '') {
+                url.hash = ''
+            }
+            const shrinkWidth = 240
+            const displayWidth = '100%'
+            const linkType = '>'
+            const secure = (url.protocol === 'https:' ? 's/' : '')
+            const ampUrl = `https://${sub}.cdn.ampproject.org/ii/w${shrinkWidth}/${secure}${url.hostname}${url.pathname}${url.search}`
+            return `[[&ref(${ampUrl},${displayWidth})${linkType}${url}]]`
+        }).filter(Boolean).join('\n')
+        if (text) text += '\n'
+        return text
+    }, (
+        `容量の大きい画像を軽量化して表示するタグに変換する (1行＝1 URL)
+        ※軽量化にはGoogle AMP キャッシュを利用、幅240pxに縮小
+
+        https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg
+        ↓↓↓
+        [[&ref(https://image01-seesaawiki-jp.cdn.ampproject.org/ii/w240/s/image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg,100%)>https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg]]`.replace(/^[ \t]+/gm, '')
+    ))
+
     if (this.membersData) {
         const repr = Object.getOwnPropertyNames(this.membersData)[0]
         addSimpleProcessor('liveeurl', 'YouTube配信リンク', (text) => {
