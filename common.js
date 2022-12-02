@@ -550,6 +550,14 @@ setupAutoFilter () {
                 applyFilter(1, name) // 歌ってみた
             }
         }
+        // ホロスターズ
+        if (this.wikiId === 'holostarstv') {
+            if (title.match(/^(?!ホロスターズ)(.+?)\s*【歌唱楽曲一覧】/)) {
+                const name = RegExp.$1
+                applyFilter(2, name) // オリジナルソング
+                applyFilter(3, name) // 歌ってみた
+            }
+        }
         // wiki別分岐終了
 
         // すべてのページ
