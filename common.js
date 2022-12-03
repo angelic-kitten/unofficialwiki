@@ -550,7 +550,7 @@ setupAutoFilter () {
                 applyFilter(1, name) // 歌ってみた
             }
         }
-         // ホロスターズ
+        // ホロスターズ
         if (this.wikiId === 'holostarstv') {
             if (title.match(/^(?!ホロスターズ)(.+?)\s*【歌唱楽曲一覧】/)) {
                 const name = RegExp.$1
