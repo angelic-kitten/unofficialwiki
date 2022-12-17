@@ -369,7 +369,7 @@ setupSongListConverter () {
         const headings = userArea.querySelectorAll('div.title-1')
         const converterHeading = Array.prototype.find.call(headings, (heading) => {
             const text = heading.textContent
-            // ホロライブ、どっとライブ、もちぷろ、のりプロ、しぐれうい
+            // ホロライブ、どっとライブ、もちぷろ、のりプロ、しぐれうい、ホロスターズ
             return text.match('歌リスト変換書き換え簡略版')
         })
         if (!converterHeading) {
@@ -472,7 +472,7 @@ setupRegexReplacer () {
         const headings = userArea.querySelectorAll('div.title-1')
         const converterHeading = Array.prototype.find.call(headings, (heading) => {
             const text = heading.textContent
-            // ホロライブ、どっとライブ、もちぷろ、しぐれうい
+            // ホロライブ、どっとライブ、もちぷろ、しぐれうい、ホロスターズ
             return text.match('正規表現置換')
         })
         if (!converterHeading) {
@@ -1496,7 +1496,45 @@ initMembersData () {
             rururica:   { yt: 'UCcd4MSYH7bPIBEUqmBgSZQw', tw: 'Rururica_VTuber', name: 'ルルンルルリカ', tag: '#ルルンルーム' },
             radio:      { yt: 'UCMzxQ58QL4NNbWghGymtHvw', tw: 'carro_pino', name: 'カルロピノ', tag: '#とりとらじお' }
         }
-    } else {
+    } else if (this.wikiId === 'noriopro') {
+        this.membersData = {
+            norioo_: {yt: 'UC8NZiqKx6fsDT3AVcMiVFyA', tw: 'norioo_', name: '犬山たまき', tag: '' },
+            mishiro: {yt: 'UCC0i9nECi4Gz7TU63xZwodg', tw: 'mishiro_seiso', name: '白雪みしろ', tag: '' },
+            MILK:    {yt: 'UCJCzy0Fyrm0UhIrGQ7tHpjg', tw: 'Enomiya_MILK', name: '愛宮みるく', tag: '' },
+            taKUMA:  {yt: 'UCCXME7oZmXB2VFHJbz5496A', tw: 'KUMAgaya_taKUMA', name: '熊谷タクマ', tag: '' },
+            yuzuru:  {yt: 'UCle1cz6rcyH0a-xoMYwLlAg', tw: 'Himesaki_yuzuru', name: '姫咲ゆずる', tag: '' },
+            kirara:  {yt: 'UCBAeKqEIugv69Q2GIgcH7oA', tw: 'omakirara', name: '逢魔きらら', tag: '' },
+            momo:    {yt: 'UCxrmkJf_X1Yhte_a4devFzA', tw: 'kurumizawamomo', name: '胡桃澤もも', tag: '' },
+            warabe:  {yt: 'UCLyTXfCZtl7dyhta9Jg3pZg', tw: 'hoozukiwarabe', name: '鬼灯わらべ', tag: '' },
+            iroha_:  {yt: 'UCWIPfdcux1WxuX5yZLPJDww', tw: 'inariiroha_', name: '稲荷いろは', tag: '' },
+            Reg:     {yt: 'UCuycJ_IsA5ESbTYhe05ozqQ', tw: 'Reg_Lionheart', name: 'レグルシュ・ライオンハート', tag: '' },
+            shin:    {yt: 'UCMxIxoMdtcLkZ1wTq7qjztg', tw: 'nekozenoshin', name: '猫瀬乃しん', tag: '' }
+        }
+    } else if (this.wikiId === 'holostarstv') {
+        this.membersData = {
+            miyabii:    {yt: 'UC6t3-_N8A6ME1JShZHHqOMw', tw: 'miyabihanasaki', name: '花咲みやび', tag: '' },
+            kira:       {yt:'UCEzsociuFqVwgZuMaZqaCsg', tw: 'kagamikirach', name: '鏡見キラ', tag: '' },
+            izuru:      {yt: 'UCZgOv3YDEs-ZnZWDYVwJdmA', tw: 'kanadeizuru', name: '奏手イヅル', tag: '' },
+            arurandeisu:{yt: 'UCKeAhJvy8zgXWbh9duVjIaQ', tw: 'arurandeisu', name: 'アルランディス', tag: '' },
+            rikka:      {yt: 'UC9mf_ZVpouoILRY9NUIaK-w', tw: 'rikkaroid', name: '律可', tag: '' },
+            astel:      {yt: 'UCNVEsYbiZjH5QLmGeSgTSzg', tw: 'astelleda', name: 'アステル・レダ', tag: '' },
+            temma:      {yt: 'UCGNI4MENvnsymYjKiZwv9eg', tw: 'kishidotemma', name: '岸堂天真', tag: '' },
+            roberu:     {yt: 'UCANDOlYTJT7N5jlRC3zfzVA', tw: 'yukokuroberu', name: '夕刻ロベル', tag: '' },
+            kaoru:      {yt: 'UCsehvfwaWF6nWuFnXI0AqZQ', tw: 'tsukishitakaoru', name: '月下カオル', tag: '' },
+            shien:      {yt: 'UChSvpZYRPh0FvG4SJGSga3g', tw: 'kageyamashien', name: '影山シエン', tag: '' },
+            oga:        {yt:'UCwL7dgTxKo8Y4RFIKWaf8gA', tw: 'aragamioga', name: '荒咬オウガ', tag: '' },
+            fuma:       {yt:'UCc88OV45ICgHbn3ZqLLb52w', tw: 'yatogamifuma', name: '夜十神封魔', tag: '' },
+            uyu:        {yt:'UCgRqGV1gBf2Esxh0Tz1vxzw', tw: 'utsugiuyu', name: '羽継烏有', tag: '' },
+            gamma:      {yt: 'UCkT1u65YS49ca_LsFwcTakw', tw: 'hizakigamma', name: '緋崎ガンマ', tag: '' },
+            rio:        {yt:'UCdfMHxjcCc2HSd9qFvfJgjg', tw: 'minaserioch', name: '水無世燐央', tag: '' },
+
+            altare:     {yt: 'UCyxtGMdWlURZ30WSnEjDOQw', tw: 'regisaltare', name: 'Regis Altare', tag: '' },
+            dezmond:    {yt: 'UC7MMNHR-kf9EN1rXiesMTMw', tw: 'magnidezmond', name: 'Magni Dezmond', tag: '' },
+            syrios:     {yt: 'UC2hx0xVkMoHGWijwr_lA01w', tw: 'axelsyrios', name: 'Axel Syrios', tag: '' },
+            vesper:     {yt: 'UCDRWSO281bIHYVi-OV3iFYA', tw: 'noirvesper_en', name: 'Noir Vesper', tag: '' },
+            holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' },
+        }
+    }   else {
         this.membersData = null
     }
 } // initMembersData
