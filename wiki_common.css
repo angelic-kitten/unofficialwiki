@@ -21,3 +21,9 @@ div.user-area table td {
 div.user-area table.stripe tbody tr.odd {
   background-color: #f1f1f1;
 }
+
+/* 縦書き */
+div.user-area table th {
+  -ms-writing-mode: var(--th-writing-mode,inherit);
+  writing-mode: var(--th-writing-mode,inherit);
+}
