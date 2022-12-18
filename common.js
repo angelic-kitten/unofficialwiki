@@ -532,6 +532,7 @@ setupAutoFilter () {
                 applyFilter(2, name) // 簡易
                 applyFilter(3, name) // 外部
                 applyFilter(4, name) // 歌ってみた
+                applyFilter(5, name) // イベント
             }
         }
         // ホロライブ
@@ -540,6 +541,7 @@ setupAutoFilter () {
                 const name = RegExp.$1
                 applyFilter(2, name) // オリジナルソング
                 applyFilter(3, name) // 歌ってみた
+                applyFilter(4, name) // イベント
             }
         }
         // のりプロ
