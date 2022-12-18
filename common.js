@@ -1532,7 +1532,7 @@ initMembersData () {
             dezmond:    {yt: 'UC7MMNHR-kf9EN1rXiesMTMw', tw: 'magnidezmond', name: 'Magni Dezmond', tag: '' },
             syrios:     {yt: 'UC2hx0xVkMoHGWijwr_lA01w', tw: 'axelsyrios', name: 'Axel Syrios', tag: '' },
             vesper:     {yt: 'UCDRWSO281bIHYVi-OV3iFYA', tw: 'noirvesper_en', name: 'Noir Vesper', tag: '' },
-            holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' },
+            holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' }
         }
     }   else {
         this.membersData = null
