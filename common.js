@@ -209,7 +209,30 @@ initCustomHashParams () {
         const anchor = document.getElementById(aname) || Array.prototype.find.call(document.querySelectorAll('a[name]'), (el) => (el.name === aname))
         if (anchor) {
             // anchor.scrollIntoView();
-            window.scrollTo(0, anchor.offsetTop - 40)
+            // window.scrollTo(0, anchor.offsetTop - 40)
+
+            const yMargin = 40
+            let target = anchor
+            let prev = null
+
+            // 非表示要素の場合、表示されてる親要素をターゲットにする
+            while (target.offsetParent === null) {
+                prev = target
+                target = target.parentElement
+            }
+            let yDiff = target.getBoundingClientRect().top
+
+            // 親要素にした場合、本来表示されるはずの位置を計算
+            if (prev !== null) {
+                while (prev !== null && prev.offsetParent === null) {
+                    prev = prev.previousElementSibling
+                }
+                if (prev !== null) {
+                    yDiff = prev.getBoundingClientRect().bottom
+                }
+            }
+
+            window.scrollTo({top: yDiff + window.pageYOffset - yMargin})
         }
     }
 
