@@ -751,7 +751,11 @@ setupEditingTools () {
             const url = parseURL(line)
             let vid
             if (url && url.hostname === 'www.youtube.com') {
-                vid = url.searchParams.get('v')
+                if (url.pathname.startsWith('/live/')) {
+                    vid = url.pathname.split('/')[2]
+                } else {
+                    vid = url.searchParams.get('v')
+                }
             } else if (url && url.hostname === 'youtu.be') {
                 vid = url.pathname.slice(1)
             }
