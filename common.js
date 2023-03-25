@@ -575,6 +575,14 @@ setupAutoFilter () {
                 applyFilter(1, name) // 歌ってみた
             }
         }
+        // 逢魔きらら・胡桃澤もも
+        if (this.wikiId === 'momokira') {
+            if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
+                const name = RegExp.$1
+                applyFilter(0, name) // オリジナルソング
+                applyFilter(1, name) // 歌ってみた
+            }
+        }
         // ホロスターズ
         if (this.wikiId === 'holostarstv') {
             if (title.match(/^(?!ホロスターズ)(.+?)\s*【歌唱楽曲一覧】/)) {
