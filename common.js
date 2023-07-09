@@ -1592,7 +1592,7 @@ initMembersData () {
             vesper:     {yt: 'UCDRWSO281bIHYVi-OV3iFYA', tw: 'noirvesper_en', name: 'Noir Vesper', tag: '' },
             holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' }
         }
-    }   else {
+    } else {
         this.membersData = null
     }
 } // initMembersData
