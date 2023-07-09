@@ -548,50 +548,40 @@ setupAutoFilter () {
     function applyFilters () {
         const title = document.title
 
-        // どっとライブ
-        if (this.wikiId === 'siroyoutuber') {
-            if (title.match(/^(?!どっとライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+        let match
+        if ((match = /^(.+?)\s*【歌唱楽曲一覧】/.exec(title)) !== null) {
+            const name = match[1]
+
+            // どっとライブ
+            if (this.wikiId === 'siroyoutuber' && !(name.startsWith('どっとライブ') || name.startsWith('ぶいぱい'))) {
                 applyFilter(2, name) // 簡易
                 applyFilter(3, name) // 外部
                 applyFilter(4, name) // 歌ってみた
                 applyFilter(5, name) // イベント
             }
-        }
-        // ホロライブ
-        if (this.wikiId === 'hololivetv') {
-            if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // ホロライブ
+            if (this.wikiId === 'hololivetv' && !name.startsWith('ホロライブ')) {
                 applyFilter(2, name) // オリジナルソング
                 applyFilter(3, name) // 歌ってみた
                 applyFilter(4, name) // イベント
             }
-        }
-        // のりプロ
-        if (this.wikiId === 'noriopro') {
-            if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // のりプロ
+            if (this.wikiId === 'noriopro' && !name.startsWith('のりプロ')) {
                 applyFilter(0, name) // オリジナルソング
                 applyFilter(1, name) // 歌ってみた
             }
-        }
-        // 逢魔きらら・胡桃澤もも
-        if (this.wikiId === 'momokira') {
-            if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // 逢魔きらら・胡桃澤もも
+            if (this.wikiId === 'momokira') {
                 applyFilter(0, name) // オリジナルソング
                 applyFilter(1, name) // 歌ってみた
             }
-        }
-        // ホロスターズ
-        if (this.wikiId === 'holostarstv') {
-            if (title.match(/^(?!ホロスターズ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // ホロスターズ
+            if (this.wikiId === 'holostarstv' && !name.startsWith('ホロスターズ')) {
                 applyFilter(2, name) // オリジナルソング
                 applyFilter(3, name) // 歌ってみた
             }
+            // wiki別分岐終了
         }
-        // wiki別分岐終了
 
         // すべてのページ
         const keyword = this.urlParams.get('keyword')
@@ -783,6 +773,7 @@ setupEditingTools () {
         [[&ref(https://i.ytimg.com/vi/TjGC7Jzc5ns/mqdefault.jpg,100%)>>https://youtu.be/TjGC7Jzc5ns]]`.replace(/^[ \t]+/gm, '')
     ))
 
+    /*
     // https://amp.dev/ja/documentation/guides-and-tutorials/learn/amp-caches-and-cors/how_amp_pages_are_cached/
     // https://amp.dev/ja/documentation/guides-and-tutorials/learn/amp-caches-and-cors/amp-cache-urls/
     addSimpleProcessor('imgampcache', '画像軽量化', (text) => {
@@ -814,6 +805,36 @@ setupEditingTools () {
         https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg
         ↓↓↓
         [[&ref(https://image01-seesaawiki-jp.cdn.ampproject.org/ii/w240/s/image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg,100%)>https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.jpg]]`.replace(/^[ \t]+/gm, '')
+    ))
+    */
+
+    // https://wsrv.nl/
+    addSimpleProcessor('imgcache', '画像軽量化', (text) => {
+        text = text.split(/[\r\n]+/).map((line) => {
+            const url = parseURL(line)
+            if (!url) {
+                return line
+            }
+            if (url.hash !== '') {
+                url.hash = ''
+            }
+            const shrinkWidth = 240
+            const outputFormat = 'jpg'
+            const displayWidth = '100%'
+            const linkType = '>'
+            const escapedUrl = url.toString().replace(/[^0-9A-Za-z_\-\/\:]/g, (x) => encodeURIComponent(x))
+            const filenameParam = (url.pathname.match(/(?:jpg|png|gif)$/i) ? '' : `&filename=image.${outputFormat}`)
+            const cacheUrl = `https://wsrv.nl/?w=${shrinkWidth}&output=${outputFormat}&url=${escapedUrl}${filenameParam}`
+            return `[[&ref(${cacheUrl},${displayWidth})${linkType}${url}]]`
+        }).filter(Boolean).join('\n')
+        if (text) text += '\n'
+        return text
+    }, (
+        `容量の大きい画像を軽量化して表示するタグに変換する (1行＝1 URL、wsrv.nl を利用)
+
+        https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.png
+        ↓↓↓ 幅240pxに縮小 (png→jpg)
+        [[&ref(https://wsrv.nl/?w=240&output=jpg&url=https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.png,100%)>https://image01.seesaawiki.jp/h/v/xxx/XXXXXXXXXX.png]]`.replace(/^[ \t]+/gm, '')
     ))
 
     if (this.membersData) {
@@ -1571,7 +1592,7 @@ initMembersData () {
             vesper:     {yt: 'UCDRWSO281bIHYVi-OV3iFYA', tw: 'noirvesper_en', name: 'Noir Vesper', tag: '' },
             holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' }
         }
-    }   else {
+    } else {
         this.membersData = null
     }
 } // initMembersData
