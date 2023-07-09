@@ -548,50 +548,40 @@ setupAutoFilter () {
     function applyFilters () {
         const title = document.title
 
-        // どっとライブ
-        if (this.wikiId === 'siroyoutuber') {
-            if (title.match(/^(?!どっとライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+        let match
+        if ((match = /^(.+?)\s*【歌唱楽曲一覧】/.exec(title)) !== null) {
+            const name = match[1]
+
+            // どっとライブ
+            if (this.wikiId === 'siroyoutuber' && !(name.startsWith('どっとライブ') || name.startsWith('ぶいぱい'))) {
                 applyFilter(2, name) // 簡易
                 applyFilter(3, name) // 外部
                 applyFilter(4, name) // 歌ってみた
                 applyFilter(5, name) // イベント
             }
-        }
-        // ホロライブ
-        if (this.wikiId === 'hololivetv') {
-            if (title.match(/^(?!ホロライブ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // ホロライブ
+            if (this.wikiId === 'hololivetv' && !name.startsWith('ホロライブ')) {
                 applyFilter(2, name) // オリジナルソング
                 applyFilter(3, name) // 歌ってみた
                 applyFilter(4, name) // イベント
             }
-        }
-        // のりプロ
-        if (this.wikiId === 'noriopro') {
-            if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // のりプロ
+            if (this.wikiId === 'noriopro' && !name.startsWith('のりプロ')) {
                 applyFilter(0, name) // オリジナルソング
                 applyFilter(1, name) // 歌ってみた
             }
-        }
-        // 逢魔きらら・胡桃澤もも
-        if (this.wikiId === 'momokira') {
-            if (title.match(/^(?!のりプロ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // 逢魔きらら・胡桃澤もも
+            if (this.wikiId === 'momokira') {
                 applyFilter(0, name) // オリジナルソング
                 applyFilter(1, name) // 歌ってみた
             }
-        }
-        // ホロスターズ
-        if (this.wikiId === 'holostarstv') {
-            if (title.match(/^(?!ホロスターズ)(.+?)\s*【歌唱楽曲一覧】/)) {
-                const name = RegExp.$1
+            // ホロスターズ
+            if (this.wikiId === 'holostarstv' && !name.startsWith('ホロスターズ')) {
                 applyFilter(2, name) // オリジナルソング
                 applyFilter(3, name) // 歌ってみた
             }
+            // wiki別分岐終了
         }
-        // wiki別分岐終了
 
         // すべてのページ
         const keyword = this.urlParams.get('keyword')
