@@ -1,4 +1,7 @@
 /* ホロの絵文字対応 &#9654; オレンジ色になってしまうため例外処理 */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap");
+/* 2.0, 4.0: Eye in Speech Bubble */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap&text=%F0%9F%91%81%EF%B8%8F%E2%80%8D%F0%9F%97%A8%EF%B8%8F");
 @font-face {
   font-family: HoloSymbol;
   font-style: normal;
