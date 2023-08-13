@@ -440,13 +440,17 @@ setupSongListConverter () {
 
         for (const songName of songs) {
             if (!songName) continue
-            const escapedSongName = WikiExtension.escapeWikiComponents(songName)
+            const line = songName
+            const time = Number(line.substring(1,2)) + "h" 
+                + Number(line.substring(4,5)) + "m"
+                + Number(line.substring(7,8)) + "s"
+            const escapedSongName = WikiExtension.escapeWikiComponents(line.substring(10))
             // const index = String(songRows.length + 1).padStart(3, '0')
             const index = ('00' + (songRows.length + 1)).slice(-3)
             const songRow = [
                 name,
                 `[[${dateDot}生>#${castAnchor}]]-${index}`,
-                `[[${escapedSongName}>>${url}&t=]]`,
+                `[[${escapedSongName}>>${url}&t=${time}]]`,
                 ''
             ]
             if (songRows.length === 0) {
