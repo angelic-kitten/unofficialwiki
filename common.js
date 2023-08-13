@@ -422,6 +422,33 @@ setupSongListConverter () {
         }
     }
 
+    // タイムスタンプの形式チェック
+    function extractHMSformat(timeStr) {
+      const regex = /(\d{1,2}:\d{1,2}(?::\d{1,2})?)/;
+      const match = timeStr.match(regex);
+      if (match) {
+        return match[1];
+      }
+      return null;
+    }
+
+    // タイムスタンプの形式チェック
+    function correntHMSformat(hmsStr) {
+      if (!hmsStr) {
+        return null;
+      }
+      let seconds = ((hmsStr) => {
+        const parts = hmsStr.split(':').map(Number).reverse();
+        const multipliers = [1, 60, 3600];  // seconds, minutes, hours
+        return parts.reduce((acc, part, index) => acc + part * multipliers[index], 0);
+      })(hmsStr);
+      const hours = Math.floor(seconds / 3600);
+      seconds -= hours * 3600;
+      const minutes = Math.floor(seconds / 60);
+      seconds -= minutes * 60;
+      return `${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}m${seconds.toString().padStart(2, '0')}s`.replace(/00[hms]/g, '');
+    }
+
     // 歌唱楽曲リスト変換処理
     function convertSongList () {
         const name = boxes.name.value.replace(/\n/g, '')
@@ -439,39 +466,24 @@ setupSongListConverter () {
         const songRows = []
 
         for (const line of songs) {
-            if (!line) continue
-            let timestamp = ''
-            let songName = line
-            let match;
-            // h:m:s
-            if ((match = line.match(/^[ 　]*([0-9]{1,3}):([0-5]?[0-9]):([0-5]?[0-9])[ 　]+(.+)$/))) {
-                songName = match[4]
-                const h = Number(match[1])
-                const m = Number(match[2])
-                const s = Number(match[3])
-                timestamp = `${h}h${m}m${s}s`
-            // m:s
-            } else if ((match = line.match(/^[ 　]*([0-9]{1,3}):([0-5]?[0-9])[ 　]+(.+)/))) {
-                songName = match[3]
-                let m = Number(match[1])
-                const s = Number(match[2])
-                const h = (m - (m % 60)) / 60
-                m = m % 60
-                timestamp = `${h}h${m}m${s}s`
-            }
-            const escapedSongName = WikiExtension.escapeWikiComponents(songName)
-            // const index = String(songRows.length + 1).padStart(3, '0')
-            const index = ('00' + (songRows.length + 1)).slice(-3)
-            const songRow = [
-                name,
-                `[[${dateDot}生>#${castAnchor}]]-${index}`,
-                `[[${escapedSongName}>>${url}&t=${timestamp}]]`,
-                ''
-            ]
-            if (songRows.length === 0) {
-                songRow[1] += `&aname(${dataAnchor})`
-            }
-            songRows.push('|' + songRow.join('|') + '|')
+          if (!line) continue
+          const hmsStr = extractHMSformat(line);
+          const timestamp = correntHMSformat(hmsStr);
+
+          const songName = !hmsStr ? line : line.split(hmsStr).pop().replace(/^[ 　]+|[ 　]+$/g, '');
+          const escapedSongName = WikiExtension.escapeWikiComponents(songName)
+          const songUrl = timestamp ? `[[${escapedSongName}>>${url}&t=${timestamp}]]` : `[[${escapedSongName}>>${url}]]`;
+          const index = ('00' + (songRows.length + 1)).slice(-3)
+          const songRow = [
+            name,
+            `[[${dateDot}生>#${castAnchor}]]-${index}`,
+            songUrl,
+            ''
+          ]
+          if (songRows.length === 0) {
+            songRow[1] += `&aname(${dataAnchor})`
+          }
+          songRows.push('|' + songRow.join('|') + '|')
         }
 
         const castRow = [
