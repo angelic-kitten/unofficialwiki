@@ -438,19 +438,34 @@ setupSongListConverter () {
 
         const songRows = []
 
-        for (const songName of songs) {
-            if (!songName) continue
-            const line = songName
-            const time = Number(line.substring(1,2)) + "h" 
-                + Number(line.substring(4,5)) + "m"
-                + Number(line.substring(7,8)) + "s"
-            const escapedSongName = WikiExtension.escapeWikiComponents(line.substring(10))
+        for (const line of songs) {
+            if (!line) continue
+            let timestamp = ''
+            let songName = line
+            let match;
+            // h:m:s
+            if ((match = line.match(/^[ 　]*([0-9]{1,3}):([0-5]?[0-9]):([0-5]?[0-9])[ 　]+(.+)$/))) {
+                songName = match[4]
+                const h = Number(match[1])
+                const m = Number(match[2])
+                const s = Number(match[3])
+                timestamp = `${h}h${m}m${s}s`
+            // m:s
+            } else if ((match = line.match(/^[ 　]*([0-9]{1,3}):([0-5]?[0-9])[ 　]+(.+)/))) {
+                songName = match[3]
+                let m = Number(match[1])
+                const s = Number(match[2])
+                const h = (m - (m % 60)) / 60
+                m = m % 60
+                timestamp = `${h}h${m}m${s}s`
+            }
+            const escapedSongName = WikiExtension.escapeWikiComponents(songName)
             // const index = String(songRows.length + 1).padStart(3, '0')
             const index = ('00' + (songRows.length + 1)).slice(-3)
             const songRow = [
                 name,
                 `[[${dateDot}生>#${castAnchor}]]-${index}`,
-                `[[${escapedSongName}>>${url}&t=${time}]]`,
+                `[[${escapedSongName}>>${url}&t=${timestamp}]]`,
                 ''
             ]
             if (songRows.length === 0) {
