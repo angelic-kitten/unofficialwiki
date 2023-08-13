@@ -731,6 +731,7 @@ setupEditingTools () {
         addCheckbox('syntax_check.box', '文法チェック：BOX記法の整合性チェック', true)
         addCheckbox('syntax_check.table', '文法チェック：テーブルの整合性チェック', true)
         addCheckbox('syntax_check.anchor', '文法チェック：アンカーの重複チェック', true)
+        addCheckbox('syntax_check.shorturl', '文法チェック：短縮URLのチェック', true)
 
         function addCheckbox (name, label, default_, onchanged) {
             const el_label = document.createElement('label')
@@ -1251,6 +1252,7 @@ setupSyntaxChecker () {
         load('table', 'tool.syntax_check.table.enabled', true)
         load('folding', 'tool.syntax_check.folding.enabled', true)
         load('anchor', 'tool.syntax_check.anchor.enabled', true)
+        load('shorturl', 'tool.syntax_check.shorturl.enabled', true)
         if (changed) {
             checkSyntaxAndDisplay()
         }
@@ -1476,6 +1478,15 @@ setupSyntaxChecker () {
                     if (line.type === 'heading') {
                         notifyError('見出しにアンカーが使用されています。', line, 'warning')
                     }
+                }
+            }
+        }
+
+        // 短縮URL
+        if (options.shorturl) {
+            for (let line = lines[0]; line; line = line.next) {
+                if (/https?:\/\/(t\.co|bit\.ly)\//.test(line.text)) {
+                    notifyError('短縮URLが使用されています。', line, 'warning')
                 }
             }
         }
