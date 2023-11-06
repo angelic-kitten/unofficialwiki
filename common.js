@@ -1631,7 +1631,7 @@ initMembersData () {
             milily:     { yt: 'UCSlcMof1GIPvH6H_VcknCbQ', tw: 'Milily_VTuber', name: '七星みりり', tag: '#ななみりライブ' },
             rikumu:     { yt: 'UCtM5G3bS7zM8bv6p-OwoNTw', tw: 'Rikumu_VTuber', name: 'リクム', tag: '#リクム' },
             rururica:   { yt: 'UCcd4MSYH7bPIBEUqmBgSZQw', tw: 'Rururica_VTuber', name: 'ルルンルルリカ', tag: '#ルルンルーム' },
-            radio:      { yt: 'UCMzxQ58QL4NNbWghGymtHvw', tw: 'carro_pino', name: 'カルロピノ', tag: '#とりとらじお' }.
+            radio:      { yt: 'UCMzxQ58QL4NNbWghGymtHvw', tw: 'carro_pino', name: 'カルロピノ', tag: '#とりとらじお' },
             ame:        { yt: 'UCSiTkTBwIMwsAetwwzgFyBg', bi:'', tw:'', name:'甘噛あめ', tag: ''},
             chihaya:    { yt: 'UCWtr2UnCkvyFZnzKBQqG3lg', bi:'', tw:'', name:'十六夜ちはや', tag: ''},
             misaki:     { yt: 'UCQoK32rBoWhHTBIWOYsYC4Q', bi:'', tw:'', name:'鬼頭みさき', tag: ''},
