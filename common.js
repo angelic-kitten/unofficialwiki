@@ -61,6 +61,7 @@ setup () {
         this.setupSongListConverter() // 入力補助ツールページ
         this.setupRegexReplacer() // 入力補助ツールページ
         this.setupAutoFilter() // 歌唱楽曲一覧ページなど
+        this.setupDataPageRedirector() // データページからのリダイレクト
         if (!this.isMobileLayout) {
             this.setupTableFilterGenerator() // 右メニュー
         }
