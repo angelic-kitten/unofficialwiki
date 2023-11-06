@@ -679,6 +679,40 @@ setupTableFilterGenerator () {
 } // setupTableFilterGenerator
 
 //----------
+// データページのページリダイレクト生成機能（_データページから本体のページへ）
+//----------
+
+setupDataPageRedirector() {
+  const userArea = document.querySelector('div.user-area');
+  if (userArea === null) {
+    throw new Error('failed to find user-area element');
+  }
+
+  const tables = document.querySelectorAll('table[id*="content_block_"]');
+  Array.prototype.find.call(tables, (table) => {
+    // --redirect-to-url 指定のあるテーブルがあれば
+    const redirectTo = table.style.getPropertyValue('--redirect-to-url');
+    if (!redirectTo) return;
+
+    // 記事上部に誘導メッセージを表示する
+    const message = document.createElement('div');
+    message.style.color = '#d00';
+
+    // --redirect-to-label 指定があればUTF-8でURLデコードしてリンクテキストとして使用する
+    const link = document.createElement('a');
+    const redirectToLabel = decodeURIComponent(table.style.getPropertyValue('--redirect-to-label'));
+    link.innerText = redirectToLabel || 'こちら';
+    link.href = redirectTo;
+
+    message.appendChild(document.createTextNode('※このページは編集用データページです。記事本体は'));
+    message.appendChild(link);
+    message.appendChild(document.createTextNode('を参照してください。'));
+
+    userArea.insertBefore(message, userArea.firstChild);
+  });
+}  //setupDataPageRedirector
+    
+//----------
 // 編集ツール (編集画面)
 //----------
 
@@ -1561,13 +1595,27 @@ initMembersData () {
             kronii:     {yt: 'UCmbs8T6MWqUHP1tIQvSgKrg', bi:'', tw:'', name: 'Ouro Kronii', tag: ''},
             mumei:      {yt: 'UC3n5uGu18FoCy23ggWWp8tA', bi:'', tw:'', name: 'Nanashi Mumei', tag: ''},
             hakos:      {yt: 'UCgmPnx-EEeOrZSg5Tiw7ZRQ', bi:'', tw:'', name: 'Hakos Baelz', tag: ''},
+            shiori:	    {yt: 'UCgnfPPb9JI3e9A4cXHnWbyg', bi:'', tw:'', name:'Shiori Novella', tag: ''},
+            bijou:	    {yt: 'UC9p_lqQ0FEDz327Vgf5JwqA', bi:'', tw:'', name:'Koseki Bijou', tag: ''},
+            nerissa:	{yt: 'UC_sFNM0z0MWm9A6WlKPuMMg', bi:'', tw:'', name:'Nerissa Ravencroft', tag: ''},
+            fuwawa:	    {yt: 'UCt9H_RpQzhxzlyBxFqrdHqA', bi:'', tw:'', name:'Fuwawa Abyssgard', tag: ''},
+            mococo:	    {yt: 'UCt9H_RpQzhxzlyBxFqrdHqA', bi:'', tw:'', name:'Mococo Abyssgard', tag: ''},
+            fuwamoco:	{yt: 'UCt9H_RpQzhxzlyBxFqrdHqA', bi:'', tw:'', name:'FUWAMOCO', tag: ''},
             english:    {yt: 'UCotXwY6s8pWmuWd_snKYjhg', bi:'', tw:'', name: 'hololive English', tag: ''},
+
+            ao:	        {yt: 'UCMGfV7TVTmHhEErVJg1oHBQ',bi:'', tw:'', name:'火威青', tag: ''},
+            kanade:	    {yt: 'UCWQtYtq9EOB4-I5P-3fh8lA',bi:'', tw:'', name:'音乃瀬奏', tag: ''},
+            ririka:	    {yt: 'UCtyWhCj3AqKh2dXctLkDtng',bi:'', tw:'', name:'一条莉々華', tag: ''},
+            raden:    	{yt: 'UCdXAk5MpyLD8594lm_OvtGQ',bi:'', tw:'', name:'儒烏風亭らでん', tag: ''},
+            hajime:	    {yt: 'UC1iA6_NT4mtAcIII6ygrvCw',bi:'', tw:'', name:'轟はじめ', tag: ''},
+            dev_is:	    {yt: 'UC10wVt6hoQiwySRhz7RdOUA',bi:'', tw:'', name:'DEV_IS', tag: ''},
 
             ankimo:     {yt: 'UCGSOfFtVCTBfmGxHK5OD8ag', bi: '', tw: '', name: 'あん肝', tag: '#あん肝'},
 
             chocosub:   {yt: 'UCp3tgHXw_HI0QMk1K8qh3gQ', bi: '', tw: '', name: 'ちょこSub', tag: '#癒月診療所'},
             //  gamer:      {name: "ホロライブゲーマーズ"},
-            holo:       {yt: 'UCJFZiqLMntJufDCHc6bQixg', bi: '8982686', tw: '', name: 'ホロライブ公式', tag: '#ホロライブ'}
+            holo:       {yt: 'UCJFZiqLMntJufDCHc6bQixg', bi: '8982686', tw: '', name: 'ホロライブ公式', tag: '#ホロライブ'},
+            journey:	{yt: 'UCrEgFGxfrKGyy17V9csSa5w',bi:'', tw:'', name:'Blue Journey', tag: ''}
         }
     } else if (this.wikiId === 'siroyoutuber') {
         this.membersData = {
@@ -1583,7 +1631,14 @@ initMembersData () {
             milily:     { yt: 'UCSlcMof1GIPvH6H_VcknCbQ', tw: 'Milily_VTuber', name: '七星みりり', tag: '#ななみりライブ' },
             rikumu:     { yt: 'UCtM5G3bS7zM8bv6p-OwoNTw', tw: 'Rikumu_VTuber', name: 'リクム', tag: '#リクム' },
             rururica:   { yt: 'UCcd4MSYH7bPIBEUqmBgSZQw', tw: 'Rururica_VTuber', name: 'ルルンルルリカ', tag: '#ルルンルーム' },
-            radio:      { yt: 'UCMzxQ58QL4NNbWghGymtHvw', tw: 'carro_pino', name: 'カルロピノ', tag: '#とりとらじお' }
+            radio:      { yt: 'UCMzxQ58QL4NNbWghGymtHvw', tw: 'carro_pino', name: 'カルロピノ', tag: '#とりとらじお' }.
+            ame:        { yt: 'UCSiTkTBwIMwsAetwwzgFyBg', bi:'', tw:'', name:'甘噛あめ', tag: ''},
+            chihaya:    { yt: 'UCWtr2UnCkvyFZnzKBQqG3lg', bi:'', tw:'', name:'十六夜ちはや', tag: ''},
+            misaki:     { yt: 'UCQoK32rBoWhHTBIWOYsYC4Q', bi:'', tw:'', name:'鬼頭みさき', tag: ''},
+            maru:       { yt: 'UCK6vZrTlPNCrWzXHIgwDy4Q', bi:'', tw:'', name:'紅蓮罰まる', tag: ''},
+            setsuna:    { yt: 'UClhLb5qSZy0Gvn3c-HuaInQ', bi:'', tw:'', name:'斜落せつな', tag: ''},
+            pane:       { yt: 'UCEiB6vkUtWsBwYsAF7ukKXw', bi:'', tw:'', name:'秘間慈ぱね', tag: ''},
+            vpi:        { yt: 'UC7-YM5BhR-FCZloquRE7XGw', bi:'', tw:'', name:'ぶいぱい', tag: ''}
         }
     } else if (this.wikiId === 'noriopro') {
         this.membersData = {
