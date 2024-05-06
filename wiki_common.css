@@ -35,3 +35,27 @@ div.user-area table th {
   -ms-writing-mode: var(--th-writing-mode,inherit);
   writing-mode: var(--th-writing-mode,inherit);
 }
+
+/* カラム非表示 */
+table.hide-1 th:nth-child(1), table.hide-1 td:nth-child(1),
+table.hide-2 th:nth-child(2), table.hide-2 td:nth-child(2),
+table.hide-3 th:nth-child(3), table.hide-3 td:nth-child(3),
+table.hide-4 th:nth-child(4), table.hide-4 td:nth-child(4),
+table.hide-5 th:nth-child(5), table.hide-5 td:nth-child(5),
+table.hide-6 th:nth-child(6), table.hide-6 td:nth-child(6),
+table.hide-7 th:nth-child(7), table.hide-7 td:nth-child(7),
+table.hide-8 th:nth-child(8), table.hide-8 td:nth-child(8),
+table.hide-9 th:nth-child(9), table.hide-9 td:nth-child(9),
+table.hide-10 th:nth-child(10), table.hide-10 td:nth-child(10),
+table.hide-11 th:nth-child(11), table.hide-11 td:nth-child(11),
+table.hide-12 th:nth-child(12), table.hide-12 td:nth-child(12),
+table.hide-13 th:nth-child(13), table.hide-13 td:nth-child(13),
+table.hide-14 th:nth-child(14), table.hide-14 td:nth-child(14),
+table.hide-15 th:nth-child(15), table.hide-15 td:nth-child(15),
+table.hide-16 th:nth-child(16), table.hide-16 td:nth-child(16),
+table.hide-17 th:nth-child(17), table.hide-17 td:nth-child(17),
+table.hide-18 th:nth-child(18), table.hide-18 td:nth-child(18),
+table.hide-19 th:nth-child(19), table.hide-19 td:nth-child(19),
+table.hide-20 th:nth-child(20), table.hide-20 td:nth-child(20) {
+  display: none;
+}
