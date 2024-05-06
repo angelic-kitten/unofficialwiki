@@ -307,14 +307,31 @@ setupTableFilter () {
         // オリジナルの入力監視機能を無効化
         input.unbind('focus').blur().unbind('blur')
 
+        // 正規表現切り替えボタンを追加
+        const regexToggleButton = $('<input type="checkbox">')
+        regexToggleButton.prop('checked', table.hasClass('regex'))
+        const regexToggleIcon = $('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-regex" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 1 1 .707.707m9.9-.707a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707M6 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0m5-6.5a.5.5 0 0 0-1 0v2.117L8.257 5.57a.5.5 0 0 0-.514.858L9.528 7.5 7.743 8.571a.5.5 0 1 0 .514.858L10 8.383V10.5a.5.5 0 1 0 1 0V8.383l1.743 1.046a.5.5 0 0 0 .514-.858L11.472 7.5l1.785-1.071a.5.5 0 1 0-.514-.858L11 6.617z"/></svg>')
+        regexToggleIcon.css("vertical-align", "text-bottom")
+        const regexToggleLabel = $('<label></label>')
+        regexToggleLabel.append(regexToggleButton)
+        regexToggleLabel.append(regexToggleIcon)
+        input.parent().css('display', 'inline-block')
+        regexToggleLabel.insertAfter(input.parent())
+
+        // フィルター入力欄と正規表現ボタンを紐づけ
+        input.data('regex', regexToggleButton)
+
         // 自前の入力監視・フィルター適用機能で上書き
         input.textChange({
             change: function (self) {
                 $(self).trigger('apply')
             }
         })
-        input.change(function () {
+        input.on('change', function () {
             $(this).trigger('apply')
+        })
+        regexToggleButton.on('change', function () {
+            input.trigger('apply')
         })
 
     })
@@ -340,16 +357,20 @@ setupTableFilter () {
 
     // 正規表現対応のフィルター適用処理
     $("input[id^='table-filter-']").on('apply', function () {
+        const regexToggleButton = $(this).data('regex')
+
         const pattern = $(this).val()
+        const is_regex = regexToggleButton.prop('checked')
+        const ignore_case = true // 一律で大小区別なし
+
+        const state = pattern + (is_regex ? 'r' : '-') + (ignore_case ? 'i' : '-');
         const prev = $(this).data('prev')
-        if (prev === pattern) return
-        $(this).data('prev', pattern)
+        if (prev === state) return
+        $(this).data('prev', state)
 
         const table = $(this).data('target')
 
         // 設定に応じたマッチング関数を用意
-        const is_regex = table.hasClass('regex')
-        const ignore_case = true // 一律で大小区別なし
         const test = gen_tester(pattern, ignore_case, is_regex)
         if (test === null) return
 
@@ -637,6 +658,8 @@ setupAutoFilter () {
             const input = $(`#table-filter-${idx}`)
             if (!input) return
             table.addClass('regex')
+            const regexToggleButton = $(input).data('regex')
+            regexToggleButton.prop('checked', true)
             input.val(keyword).change()
         }
     }
