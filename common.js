@@ -732,6 +732,7 @@ setupEditingTools () {
         addCheckbox('syntax_check.table', '文法チェック：テーブルの整合性チェック', true)
         addCheckbox('syntax_check.anchor', '文法チェック：アンカーの重複チェック', true)
         addCheckbox('syntax_check.shorturl', '文法チェック：短縮URLのチェック', true)
+        addCheckbox('syntax_check.trailing_space', '文法チェック：行末半角スペースのチェック', true)
 
         function addCheckbox (name, label, default_, onchanged) {
             const el_label = document.createElement('label')
@@ -1253,6 +1254,7 @@ setupSyntaxChecker () {
         load('folding', 'tool.syntax_check.folding.enabled', true)
         load('anchor', 'tool.syntax_check.anchor.enabled', true)
         load('shorturl', 'tool.syntax_check.shorturl.enabled', true)
+        load('trailing_space', 'tool.syntax_check.trailing_space.enabled', true)
         if (changed) {
             checkSyntaxAndDisplay()
         }
@@ -1487,6 +1489,15 @@ setupSyntaxChecker () {
             for (let line = lines[0]; line; line = line.next) {
                 if (/https?:\/\/(t\.co|bit\.ly)\//.test(line.text)) {
                     notifyError('短縮URLが使用されています。', line, 'warning')
+                }
+            }
+        }
+
+        // 行末半角スペース
+        if (options.trailing_space) {
+            for (let line = lines[0]; line; line = line.next) {
+                if (line.text.endsWith(" ")) {
+                    notifyError('行末に半角スペースがあります。', line, 'warning')
                 }
             }
         }
