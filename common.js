@@ -770,7 +770,7 @@ setupEditingTools () {
     addSimpleProcessor('tweetref', 'ツイート参照タグ', (text) => {
         text = text.split(/[\r\n]+/).map((line) => {
             const url = parseURL(line)
-            if (url && url.hostname === 'twitter.com') {
+            if (url && (url.hostname === 'twitter.com' || url.hostname === 'x.com')) {
                 const pathArr = url.pathname.split('/')
                 const index = pathArr.findIndex(v => v === 'status')
                 if (index >= 0) {
