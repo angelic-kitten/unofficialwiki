@@ -62,6 +62,7 @@ setup () {
         this.setupRegexReplacer() // 入力補助ツールページ
         this.setupAutoFilter() // 歌唱楽曲一覧ページなど
         this.setupDataPageRedirector() // データページからのリダイレクト
+        this.setupThumbnailColumn()
         if (!this.isMobileLayout) {
             this.setupTableFilterGenerator() // 右メニュー
         }
@@ -712,7 +713,61 @@ setupDataPageRedirector() {
     userArea.insertBefore(message, userArea.firstChild);
   });
 }  //setupDataPageRedirector
-    
+
+//----------
+// サムネイルカラム機能 class="thumbnail-N" (記事画面)
+//----------
+
+setupThumbnailColumn() {
+  // thumbnail-N 指定ありのテーブルが対象
+  $("table[class^='thumbnail-'], table[class*=' thumbnail-']").each(function(i) {
+    const table = $(this);
+    const m = this.className.match(/(?:^| )thumbnail-([0-9]+)(?:$| )/); // XXX: 使えるならLookbehind
+    if (!m) return;
+
+    // 対象のカラム/セル
+    const col = parseInt(m[1], 10);
+    const cells = $(`th:nth-child(${col}), td:nth-child(${col})`, table);
+
+    // 「thumbnail」というリンクを画像に置換
+    const thumbnailLinks = $("> a[href]", cells);
+    thumbnailLinks.replaceWith(function() {
+      if (this.innerText !== "thumbnail") return;
+
+      const url = this.href.split("#", 1)[0];
+      const params = new MyURLSearchParams(this.href.replace(/^.*?#/, ""));
+
+      const img = document.createElement("img");
+      // URL中の #r=H:V パラメータをもとに縦横比を指定 (w=100%指定ができるように)
+      if (params.has("r")) {
+        const m = params.get("r").match(/^([1-9][0-9]*):([1-9][0-9]*)$/);
+        if (m) {
+          img.width = m[1];
+          img.height = m[2];
+        }
+      }
+      // URL中の #w=...&h=... パラメータをもとに表示サイズを指定
+      if (params.has("w")) {
+        const w = params.get("w");
+        img.style.width = w + (/^[0-9]+$/.test(w) ? "px" : "");
+      } else {
+        img.style.width = "auto";
+      }
+      if (params.has("h")) {
+        const h = params.get("h");
+        img.style.height = h + (/^[0-9]+$/.test(h) ? "px" : "");
+      } else {
+        img.style.height = "auto";
+      }
+      // 遅延読み込み指定
+      img.loading = "lazy";
+      img.src = url;
+
+      return img;
+    });
+  });
+}  //setupThumbnailColumn
+
 //----------
 // 編集ツール (編集画面)
 //----------
@@ -1720,7 +1775,7 @@ static compareNodeOrder (e1, e2) {
 class MyURLSearchParams {
 
     constructor (search) {
-        this.params = {}
+        this.params = new Map()
         this._readOnly = false
         if (search == null) {
             return
@@ -1737,6 +1792,7 @@ class MyURLSearchParams {
                 value = param.substring(sep + 1)
             }
             if (key) {
+                value = value.replace(/%(?![0-9a-f]{2})/g, "%25")
                 this.params[decodeURIComponent(key)] = decodeURIComponent(value)
             }
         }
@@ -1744,6 +1800,10 @@ class MyURLSearchParams {
 
     get (key) {
         return this.params[key]
+    }
+
+    has (key) {
+        return this.params.hasOwnProperty(key)
     }
 
     set (key, value) {
