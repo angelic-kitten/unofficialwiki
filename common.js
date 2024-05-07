@@ -62,6 +62,7 @@ setup () {
         this.setupRegexReplacer() // 入力補助ツールページ
         this.setupAutoFilter() // 歌唱楽曲一覧ページなど
         this.setupDataPageRedirector() // データページからのリダイレクト
+        this.setupThumbnailColumn()
         if (!this.isMobileLayout) {
             this.setupTableFilterGenerator() // 右メニュー
         }
@@ -307,14 +308,31 @@ setupTableFilter () {
         // オリジナルの入力監視機能を無効化
         input.unbind('focus').blur().unbind('blur')
 
+        // 正規表現切り替えボタンを追加
+        const regexToggleButton = $('<input type="checkbox">')
+        regexToggleButton.prop('checked', table.hasClass('regex'))
+        const regexToggleIcon = $('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-regex" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 1 1 .707.707m9.9-.707a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707M6 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0m5-6.5a.5.5 0 0 0-1 0v2.117L8.257 5.57a.5.5 0 0 0-.514.858L9.528 7.5 7.743 8.571a.5.5 0 1 0 .514.858L10 8.383V10.5a.5.5 0 1 0 1 0V8.383l1.743 1.046a.5.5 0 0 0 .514-.858L11.472 7.5l1.785-1.071a.5.5 0 1 0-.514-.858L11 6.617z"/></svg>')
+        regexToggleIcon.css("vertical-align", "text-bottom")
+        const regexToggleLabel = $('<label></label>')
+        regexToggleLabel.append(regexToggleButton)
+        regexToggleLabel.append(regexToggleIcon)
+        input.parent().css('display', 'inline-block')
+        regexToggleLabel.insertAfter(input.parent())
+
+        // フィルター入力欄と正規表現ボタンを紐づけ
+        input.data('regex', regexToggleButton)
+
         // 自前の入力監視・フィルター適用機能で上書き
         input.textChange({
             change: function (self) {
                 $(self).trigger('apply')
             }
         })
-        input.change(function () {
+        input.on('change', function () {
             $(this).trigger('apply')
+        })
+        regexToggleButton.on('change', function () {
+            input.trigger('apply')
         })
 
     })
@@ -340,16 +358,20 @@ setupTableFilter () {
 
     // 正規表現対応のフィルター適用処理
     $("input[id^='table-filter-']").on('apply', function () {
+        const regexToggleButton = $(this).data('regex')
+
         const pattern = $(this).val()
+        const is_regex = regexToggleButton.prop('checked')
+        const ignore_case = true // 一律で大小区別なし
+
+        const state = pattern + (is_regex ? 'r' : '-') + (ignore_case ? 'i' : '-');
         const prev = $(this).data('prev')
-        if (prev === pattern) return
-        $(this).data('prev', pattern)
+        if (prev === state) return
+        $(this).data('prev', state)
 
         const table = $(this).data('target')
 
         // 設定に応じたマッチング関数を用意
-        const is_regex = table.hasClass('regex')
-        const ignore_case = true // 一律で大小区別なし
         const test = gen_tester(pattern, ignore_case, is_regex)
         if (test === null) return
 
@@ -637,6 +659,8 @@ setupAutoFilter () {
             const input = $(`#table-filter-${idx}`)
             if (!input) return
             table.addClass('regex')
+            const regexToggleButton = $(input).data('regex')
+            regexToggleButton.prop('checked', true)
             input.val(keyword).change()
         }
     }
@@ -712,7 +736,61 @@ setupDataPageRedirector() {
     userArea.insertBefore(message, userArea.firstChild);
   });
 }  //setupDataPageRedirector
-    
+
+//----------
+// サムネイルカラム機能 class="thumbnail-N" (記事画面)
+//----------
+
+setupThumbnailColumn() {
+  // thumbnail-N 指定ありのテーブルが対象
+  $("table[class^='thumbnail-'], table[class*=' thumbnail-']").each(function(i) {
+    const table = $(this);
+    const m = this.className.match(/(?:^| )thumbnail-([0-9]+)(?:$| )/); // XXX: 使えるならLookbehind
+    if (!m) return;
+
+    // 対象のカラム/セル
+    const col = parseInt(m[1], 10);
+    const cells = $(`th:nth-child(${col}), td:nth-child(${col})`, table);
+
+    // 「thumbnail」というリンクを画像に置換
+    const thumbnailLinks = $("> a[href]", cells);
+    thumbnailLinks.replaceWith(function() {
+      if (this.innerText !== "thumbnail") return;
+
+      const url = this.href.split("#", 1)[0];
+      const params = new MyURLSearchParams(this.href.replace(/^.*?#/, ""));
+
+      const img = document.createElement("img");
+      // URL中の #r=H:V パラメータをもとに縦横比を指定 (w=100%指定ができるように)
+      if (params.has("r")) {
+        const m = params.get("r").match(/^([1-9][0-9]*):([1-9][0-9]*)$/);
+        if (m) {
+          img.width = m[1];
+          img.height = m[2];
+        }
+      }
+      // URL中の #w=...&h=... パラメータをもとに表示サイズを指定
+      if (params.has("w")) {
+        const w = params.get("w");
+        img.style.width = w + (/^[0-9]+$/.test(w) ? "px" : "");
+      } else {
+        img.style.width = "auto";
+      }
+      if (params.has("h")) {
+        const h = params.get("h");
+        img.style.height = h + (/^[0-9]+$/.test(h) ? "px" : "");
+      } else {
+        img.style.height = "auto";
+      }
+      // 遅延読み込み指定
+      img.loading = "lazy";
+      img.src = url;
+
+      return img;
+    });
+  });
+}  //setupThumbnailColumn
+
 //----------
 // 編集ツール (編集画面)
 //----------
@@ -731,6 +809,8 @@ setupEditingTools () {
         addCheckbox('syntax_check.box', '文法チェック：BOX記法の整合性チェック', true)
         addCheckbox('syntax_check.table', '文法チェック：テーブルの整合性チェック', true)
         addCheckbox('syntax_check.anchor', '文法チェック：アンカーの重複チェック', true)
+        addCheckbox('syntax_check.shorturl', '文法チェック：短縮URLのチェック', true)
+        addCheckbox('syntax_check.trailing_space', '文法チェック：行末半角スペースのチェック', true)
 
         function addCheckbox (name, label, default_, onchanged) {
             const el_label = document.createElement('label')
@@ -768,7 +848,7 @@ setupEditingTools () {
     addSimpleProcessor('tweetref', 'ツイート参照タグ', (text) => {
         text = text.split(/[\r\n]+/).map((line) => {
             const url = parseURL(line)
-            if (url && url.hostname === 'twitter.com') {
+            if (url && (url.hostname === 'twitter.com' || url.hostname === 'x.com')) {
                 const pathArr = url.pathname.split('/')
                 const index = pathArr.findIndex(v => v === 'status')
                 if (index >= 0) {
@@ -1251,6 +1331,8 @@ setupSyntaxChecker () {
         load('table', 'tool.syntax_check.table.enabled', true)
         load('folding', 'tool.syntax_check.folding.enabled', true)
         load('anchor', 'tool.syntax_check.anchor.enabled', true)
+        load('shorturl', 'tool.syntax_check.shorturl.enabled', true)
+        load('trailing_space', 'tool.syntax_check.trailing_space.enabled', true)
         if (changed) {
             checkSyntaxAndDisplay()
         }
@@ -1476,6 +1558,24 @@ setupSyntaxChecker () {
                     if (line.type === 'heading') {
                         notifyError('見出しにアンカーが使用されています。', line, 'warning')
                     }
+                }
+            }
+        }
+
+        // 短縮URL
+        if (options.shorturl) {
+            for (let line = lines[0]; line; line = line.next) {
+                if (/https?:\/\/(t\.co|bit\.ly)\//.test(line.text)) {
+                    notifyError('短縮URLが使用されています。', line, 'warning')
+                }
+            }
+        }
+
+        // 行末半角スペース
+        if (options.trailing_space) {
+            for (let line = lines[0]; line; line = line.next) {
+                if (line.text.endsWith(" ")) {
+                    notifyError('行末に半角スペースがあります。', line, 'warning')
                 }
             }
         }
@@ -1720,7 +1820,7 @@ static compareNodeOrder (e1, e2) {
 class MyURLSearchParams {
 
     constructor (search) {
-        this.params = {}
+        this.params = new Map()
         this._readOnly = false
         if (search == null) {
             return
@@ -1737,6 +1837,7 @@ class MyURLSearchParams {
                 value = param.substring(sep + 1)
             }
             if (key) {
+                value = value.replace(/%(?![0-9a-f]{2})/g, "%25")
                 this.params[decodeURIComponent(key)] = decodeURIComponent(value)
             }
         }
@@ -1744,6 +1845,10 @@ class MyURLSearchParams {
 
     get (key) {
         return this.params[key]
+    }
+
+    has (key) {
+        return this.params.hasOwnProperty(key)
     }
 
     set (key, value) {
