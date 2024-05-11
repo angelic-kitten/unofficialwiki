@@ -316,8 +316,11 @@ setupTableFilter () {
         const regexToggleLabel = $('<label></label>')
         regexToggleLabel.append(regexToggleButton)
         regexToggleLabel.append(regexToggleIcon)
-        input.parent().css('display', 'inline-block')
-        regexToggleLabel.insertAfter(input.parent())
+        const originalFilter = input.parent()
+        originalFilter.css('display', 'inline-block') // .input-table-filter
+        originalFilter.wrap('<div></div>')
+        const filterWrapper = originalFilter.parent()
+        filterWrapper.append(regexToggleLabel)
 
         // フィルター入力欄と正規表現ボタンを紐づけ
         input.data('regex', regexToggleButton)
