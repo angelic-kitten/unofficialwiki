@@ -1837,7 +1837,7 @@ class MyURLSearchParams {
                 value = param.substring(sep + 1)
             }
             if (key) {
-                value = value.replace(/%(?![0-9a-f]{2})/g, "%25")
+                value = value.replace(/%(?![0-9a-fA-F]{2})/g, "%25")
                 this.params[decodeURIComponent(key)] = decodeURIComponent(value)
             }
         }
