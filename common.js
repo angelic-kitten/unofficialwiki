@@ -1819,7 +1819,8 @@ initMembersData () {
         this.membersData = {
             ui:         {yt: 'UCt30jJgChL8qeT9VPadidSw', tw: '', name: 'しぐれうい', tag: '', handle:'@ui_shig'},
             voisona:    {yt: 'UCoPUMQH-DiKlaJu1E_Sloqw', tw: '', name: 'VoiSona 雨衣', tag: '', handle:'@ui_roid'}
-        } else {
+        }
+    } else {
         this.membersData = null
     }
 } // initMembersData
