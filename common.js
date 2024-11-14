@@ -1732,7 +1732,13 @@ initMembersData () {
             hajime:	    {yt: 'UC1iA6_NT4mtAcIII6ygrvCw',bi:'', tw:'', name:'轟はじめ', tag: '', handle:'@TodorokiHajime'},
             dev_is:	    {yt: 'UC10wVt6hoQiwySRhz7RdOUA',bi:'', tw:'', name:'DEV_IS', tag: '', handle:'@hololiveDEV_IS'},
 
-            ankimo:     {yt: 'UCGSOfFtVCTBfmGxHK5OD8ag', bi: '', tw: '', name: 'あん肝', tag: '#あん肝', handle:''},
+            riona:      {yt: 'UC9LSiN9hXI55svYEBrrK-tw',bi:'', tw:'isakiriona', name:'響咲リオナ', tag: '', handle:'@IsakiRiona'},
+            niko:    	{yt: 'UCuI_opAVX6qbxZY-a-AxFuQ',bi:'', tw:'koganeiniko', name:'虎金妃笑虎', tag: '', handle:'@KoganeiNiko'},
+            su:	        {yt: 'UCjk2nKmHzgH5Xy-C5qYRd5A',bi:'', tw:'mizumiya_su', name:'水宮枢', tag: '', handle:'@MizumiyaSu'},
+            chihaya:	{yt: 'UCKMWFR6lAstLa7Vbf5dH7ig',bi:'', tw:'rindochihaya', name:'輪堂千速', tag: '', handle:'@RindoChihaya'},
+            vivi:    	{yt: 'UCGzTVXqMQHa4AgJVJIVvtDQ',bi:'', tw:'kikiraravivi', name:'綺々羅々ヴィヴィ', tag: '', handle:'@KikiraraVivi'},
+            flowglow:	{yt: 'UCu2n3qHuOuQIygREMnWeQWg',bi:'', tw:'', name:'FLOW GLOW', tag: '', handle:'@DEV_IS_FLOWGLOW'},
+            ankimo:     {yt: 'UCGSOfFtVCTBfmGxHK5OD8ag',bi:'', tw:'', name:'あん肝', tag: '#あん肝', handle:''},
 
             chocosub:   {yt: 'UCp3tgHXw_HI0QMk1K8qh3gQ', bi: '', tw: '', name: 'ちょこSub', tag: '#癒月診療所', handle:'@YuzukiChoco_Sub'},
             //  gamer:      {name: "ホロライブゲーマーズ", handle:''},
@@ -1763,8 +1769,13 @@ initMembersData () {
             maru:       { yt: 'UCK6vZrTlPNCrWzXHIgwDy4Q', bi:'', tw:'', name:'紅蓮罰まる', tag: '', handle:'@GurenbatsuMaru-qo8ze'},
             setsuna:    { yt: 'UClhLb5qSZy0Gvn3c-HuaInQ', bi:'', tw:'', name:'斜落せつな', tag: '', handle:'@SharakuSetsuna-on7ud'},
             pane:       { yt: 'UCEiB6vkUtWsBwYsAF7ukKXw', bi:'', tw:'', name:'秘間慈ぱね', tag: '', handle:'@HimajiPane-qt3zv'},
-            kyan:       { yt: 'UCPxSh63XjfSYJbkBLxM3fSw', bi:'', tw:'', name:'遠吠きゃん', tag: '', handle:'@ToboeKyan'},
-            vpi:        { yt: 'UC7-YM5BhR-FCZloquRE7XGw', bi:'', tw:'', name:'ぶいぱい', tag: '', handle:'@cafeVPI'}
+            ciel:    	{yt: 'UCyD-4021fig0lxKSYK9DL-g',bi:'', tw:'Kagimiya_ciel', name:'鍵宮シエル', tag: '', handle:'@Ciel.Channel'},
+            Pyoco:    	{yt: 'UCP4g36UtLmGuqEUUIPLa1fg',bi:'', tw:'KarasumaPyoco', name:'烏丸ぴょこ', tag: '', handle:'@KarasumaPyoco'},
+            kyan:    	{yt: 'UCPxSh63XjfSYJbkBLxM3fSw',bi:'', tw:'kyan_VPI', name:'遠吠きゃん', tag: '', handle:'@ToboeKyan'},
+            Belluna:	{yt: 'UCGPSbXH61y4l85L9XTUl2mA',bi:'', tw:'VermouthBelluna', name:'ベルモットベルーナ', tag: '', handle:'@VermouthBelluna'},
+            Richa:	    {yt: 'UCsrH_eLD23MzxZAmbGMr0SQ',bi:'', tw:'MargherRicha', name:'まるげりちゃ', tag: '', handle:'@MargherRicha'},
+            Neguse:	    {yt: 'UCycU4fDdw0-SXsyjj2tvMVg',bi:'', tw:'WatanukiNeguse', name:'綿貫ねぐせ', tag: '', handle:'@WatanukiNeguse'},
+            vpi:        {yt: 'UC7-YM5BhR-FCZloquRE7XGw',bi:'', tw:'', name:'ぶいぱい', tag: '', handle:'@cafeVPI'}
         }
     } else if (this.wikiId === 'noriopro') {
         this.membersData = {
@@ -1804,7 +1815,11 @@ initMembersData () {
             vesper:     {yt: 'UCDRWSO281bIHYVi-OV3iFYA', tw: 'noirvesper_en', name: 'Noir Vesper', tag: '' },
             holostarstv:{yt: 'UCWsfcksUUpoEvhia0_ut0bA', tw: 'holostarstv', name: 'ホロスターズ公式', tag: '' }
         }
-    } else {
+    } else if (this.wikiId === 'ui_shig') {
+        this.membersData = {
+            ui:         {yt: 'UCt30jJgChL8qeT9VPadidSw', tw: '', name: 'しぐれうい', tag: '', handle:'@ui_shig'},
+            voisona:    {yt: 'UCoPUMQH-DiKlaJu1E_Sloqw', tw: '', name: 'VoiSona 雨衣', tag: '', handle:'@ui_roid'}
+        } else {
         this.membersData = null
     }
 } // initMembersData
