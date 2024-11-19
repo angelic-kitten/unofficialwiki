@@ -3,59 +3,42 @@
 /* 2.0, 4.0: Eye in Speech Bubble */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap&text=%F0%9F%91%81%EF%B8%8F%E2%80%8D%F0%9F%97%A8%EF%B8%8F");
 
+@font-face {
+  font-family: sans-serif-specials;
+  font-style: normal;
+  font-weight: normal;
+  src:
+    local(Verdana), /* Windows/macOS/iOSで使える、site.cssで指定されているフォント */
+    /* sans-serif指定ができないので以降列挙 */
+    local(-apple-system), local(BlinkMacSystemFont), /* macOSのデフォルト、正体はSan Francisco */
+    local('Segoe UI Bold'), /* Windowsの英字デフォルト */
+    local(Roboto), /* 2013年以降のAndroidの英字デフォルト */
+    local(Arial); /* Windows/macOS/iOSで使える */
+  unicode-range: U+20, U+23, U+2A, U+30-39, U+A9, U+AE; /* SP, #, *, 0-9, (C), (R) */
+}
+@font-face {
+  font-family: sans-serif-specials;
+  font-style: normal;
+  font-weight: bold; /* normalの定義だけだと太字は太字用ではなく通常フォントが引き伸ばされる（なくてもいい） */
+  src:
+    local('Verdana Bold'), /* Windows/macOS/iOSで使える、site.cssで指定されているフォント */
+    /* sans-serif指定ができないので以降列挙 */
+    local(-apple-system), local(BlinkMacSystemFont), /* macOSのデフォルト、正体はSan Francisco */
+    local('Segoe UI'), /* Windowsの英字デフォルト */
+    local(Roboto), /* 2013年以降のAndroidの英字デフォルト */
+    local('Arial Bold'); /* Windows/macOS/iOSで使える */
+  unicode-range: U+20, U+23, U+2A, U+30-39, U+A9, U+AE; /* SP, #, *, 0-9, (C), (R) */
+}
+
 body {
-  font-family: var(--custom-font-family, Verdana, Roboto, 'Droid Sans', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif);
-}
-/* 枠無しテーブル用 */
-div.user-area table.noborder th,
-div.user-area table.noborder td {
-  border: none;
-}
-
-/* スクロールバー付テーブル生成 */
-.x-scroller {
-  overflow-x: auto;
-}
-.y-scroller {
-  max-height:300px;
-  overflow-y: auto;
-}
-
-/* テーブル交互色替え */
-div.user-area table td {
-  background: unset;
-}
-
-div.user-area table.stripe tbody tr.odd {
-  background-color: #f1f1f1;
-}
-
-/* 縦書き */
-div.user-area table th {
-  -ms-writing-mode: var(--th-writing-mode,inherit);
-  writing-mode: var(--th-writing-mode,inherit);
-}
-
-/* カラム非表示 */
-table.hide-1 th:nth-child(1), table.hide-1 td:nth-child(1),
-table.hide-2 th:nth-child(2), table.hide-2 td:nth-child(2),
-table.hide-3 th:nth-child(3), table.hide-3 td:nth-child(3),
-table.hide-4 th:nth-child(4), table.hide-4 td:nth-child(4),
-table.hide-5 th:nth-child(5), table.hide-5 td:nth-child(5),
-table.hide-6 th:nth-child(6), table.hide-6 td:nth-child(6),
-table.hide-7 th:nth-child(7), table.hide-7 td:nth-child(7),
-table.hide-8 th:nth-child(8), table.hide-8 td:nth-child(8),
-table.hide-9 th:nth-child(9), table.hide-9 td:nth-child(9),
-table.hide-10 th:nth-child(10), table.hide-10 td:nth-child(10),
-table.hide-11 th:nth-child(11), table.hide-11 td:nth-child(11),
-table.hide-12 th:nth-child(12), table.hide-12 td:nth-child(12),
-table.hide-13 th:nth-child(13), table.hide-13 td:nth-child(13),
-table.hide-14 th:nth-child(14), table.hide-14 td:nth-child(14),
-table.hide-15 th:nth-child(15), table.hide-15 td:nth-child(15),
-table.hide-16 th:nth-child(16), table.hide-16 td:nth-child(16),
-table.hide-17 th:nth-child(17), table.hide-17 td:nth-child(17),
-table.hide-18 th:nth-child(18), table.hide-18 td:nth-child(18),
-table.hide-19 th:nth-child(19), table.hide-19 td:nth-child(19),
-table.hide-20 th:nth-child(20), table.hide-20 td:nth-child(20) {
-  display: none;
+  /* 参考
+    https://wiki.archlinux.jp/index.php/%E3%83%95%E3%82%A9%E3%83%B3%E3%83%88
+    https://qiita.com/tsuka-rinorino/items/b30e03ce10aa38ac2a10
+  */
+  --default-font-family: 
+    sans-serif-specials, /* テキストスタイル優先の文字 */
+    'Apple Color Emoji', /* macOS/iOSの絵文字 */
+    'Noto Color Emoji', /* 主にAndroidの絵文字（WebFontで読み込んでいる） */
+    Verdana, sans-serif; /* site.cssで指定されているフォント */
+  font-family: var(--custom-font-family, var(--default-font-family));
 }
