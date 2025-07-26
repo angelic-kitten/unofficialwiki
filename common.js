@@ -914,12 +914,12 @@ setupEditingTools () {
         if (text) text += '\n'
         return text
     }, (
-        `YouTubeの動画URLをサムネ付きタグに変換する (動画一覧用加工、1行＝1 URL)
+        `YouTubeの動画URLをサムネ(1280 × 720)付きタグに変換する (動画一覧用加工、1行＝1 URL)
 
         https://www.youtube.com/watch?v=TjGC7Jzc5ns
         https://youtu.be/TjGC7Jzc5ns
         ↓↓↓
-        [[&ref(https://i.ytimg.com/vi/TjGC7Jzc5ns/mqdefault.jpg,100%)>>https://youtu.be/TjGC7Jzc5ns]]`.replace(/^[ \t]+/gm, '')
+        [[&ref(https://i.ytimg.com/vi/TjGC7Jzc5ns/maxresdefault.jpg,100%)>>https://youtu.be/TjGC7Jzc5ns]]`.replace(/^[ \t]+/gm, '')
     ))
 
     /*
@@ -1769,12 +1769,22 @@ initMembersData () {
             maru:       { yt: 'UCK6vZrTlPNCrWzXHIgwDy4Q', bi:'', tw:'', name:'紅蓮罰まる', tag: '', handle:'@GurenbatsuMaru-qo8ze'},
             setsuna:    { yt: 'UClhLb5qSZy0Gvn3c-HuaInQ', bi:'', tw:'', name:'斜落せつな', tag: '', handle:'@SharakuSetsuna-on7ud'},
             pane:       { yt: 'UCEiB6vkUtWsBwYsAF7ukKXw', bi:'', tw:'', name:'秘間慈ぱね', tag: '', handle:'@HimajiPane-qt3zv'},
+
             ciel:    	{yt: 'UCyD-4021fig0lxKSYK9DL-g',bi:'', tw:'Kagimiya_ciel', name:'鍵宮シエル', tag: '', handle:'@Ciel.Channel'},
             Pyoco:    	{yt: 'UCP4g36UtLmGuqEUUIPLa1fg',bi:'', tw:'KarasumaPyoco', name:'烏丸ぴょこ', tag: '', handle:'@KarasumaPyoco'},
             kyan:    	{yt: 'UCPxSh63XjfSYJbkBLxM3fSw',bi:'', tw:'kyan_VPI', name:'遠吠きゃん', tag: '', handle:'@ToboeKyan'},
             Belluna:	{yt: 'UCGPSbXH61y4l85L9XTUl2mA',bi:'', tw:'VermouthBelluna', name:'ベルモットベルーナ', tag: '', handle:'@VermouthBelluna'},
             Richa:	    {yt: 'UCsrH_eLD23MzxZAmbGMr0SQ',bi:'', tw:'MargherRicha', name:'まるげりちゃ', tag: '', handle:'@MargherRicha'},
             Neguse:	    {yt: 'UCycU4fDdw0-SXsyjj2tvMVg',bi:'', tw:'WatanukiNeguse', name:'綿貫ねぐせ', tag: '', handle:'@WatanukiNeguse'},
+
+            Gumi:	    {yt: 'UCXUtikLthPFa5DDmgT3naGA',bi:'', tw:'GintogeGumi', name:'銀棘ぐみ', tag: '', handle:'@VPI_GintogeGumi'},
+            Gabu:	    {yt: 'UCcrBog_CXR9gIsZH2u_Mj2A',bi:'', tw:'Komachi_Gabu', name:'コマチガブ', tag: '', handle:'@VPI_KomachiGabu'},
+            Suiren:	    {yt: 'UCh2G4R2nto3ckemjB_2Tt4g',bi:'', tw:'SaikaSuiren', name:'彩歌すいれん', tag: '', handle:'@VPI_SaikaSuiren'},
+            Kozeni:	    {yt: 'UCdWQytF_syOGwaQQuxwklxg',bi:'', tw:'NekonadeKozeni', name:'猫撫こぜに', tag: '', handle:'@VPI_NekonadeKozeni'},
+            Purin:	    {yt: 'FPAg1abIzzaXuxGKLUVXQ',bi:'', tw:'PurinHachimitsu', name:'蜂蜜ぷりん', tag: '', handle:'@VPI_HachimitsuPurin'},
+            Chumi:	    {yt: 'UCaRgPx8b0t6EjYwwzomXCpA',bi:'', tw:'HanayuriChumi', name:'花百合ちゅみ', tag: '', handle:'@VPI_HanayuriChumi'},
+            Nanoda:	    {yt: 'UCRjiAP_0KdYHGdMUBkpLVTw',bi:'', tw:'Yamada__Nanoda', name:'やまだなのだ', tag: '', handle:'@VPI_YamadaNanoda'},
+
             vpi:        {yt: 'UC7-YM5BhR-FCZloquRE7XGw',bi:'', tw:'', name:'ぶいぱい', tag: '', handle:'@cafeVPI'}
         }
     } else if (this.wikiId === 'noriopro') {
