@@ -1464,6 +1464,10 @@ setupSyntaxChecker () {
                     } else {
                         notifyError('対応する折りたたみ開始タグがありません。', line, 'error')
                     }
+                    //終了タグと同じ行へのテキスト記述の禁止 - 部分編集で不具合が出る
+                    if (line.text !== '[END]') {
+                        notifyError('折りたたみ終了タグの後ろに記述があります。', line, 'error')
+                    }
                 }
             }
             for (const line of state.folds) {
