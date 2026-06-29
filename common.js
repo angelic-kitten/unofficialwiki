@@ -856,7 +856,7 @@ setupEditingTools () {
                 const index = pathArr.findIndex(v => v === 'status')
                 if (index >= 0) {
                     return `&twitter(${pathArr[index + 1]})\n` +
-                        `((Twitter [[@${pathArr[index - 1]}>>${url}]]))`
+                        `((X [[@${pathArr[index - 1]}>>${url}]]))`
                 }
             }
             return line
@@ -864,12 +864,12 @@ setupEditingTools () {
         if (text) text += '\n'
         return text
     }, (
-        `ツイートURLからwikiタグ2種に変換する (1行＝1 URL)
+        `X (Twitter)のポストURLからwikiタグ2種に変換する (1行＝1 URL)
 
-        https://twitter.com/tokino_sora/status/1567175591358787585
+        https://x.com/tokino_sora/status/1567175591358787585
         ↓↓↓
         &twitter(1567175591358787585)
-        ((Twitter [[@tokino_sora>>https://twitter.com/tokino_sora/status/1567175591358787585]]))`.replace(/^[ \t]+/gm, '')
+        ((X [[@tokino_sora>>https://x.com/tokino_sora/status/1567175591358787585]]))`.replace(/^[ \t]+/gm, '')
     ))
 
     addSimpleProcessor('hashtag', 'ハッシュタグリンク', (text) => {
@@ -882,15 +882,15 @@ setupEditingTools () {
             if (!tag) return orig
             if (!/[^0-9_]/.test(tag)) return orig
             const escapedTag = WikiExtension.escapeWikiComponents('#' + tag)
-            return `[[${escapedTag}>>https://twitter.com/hashtag/${encodeURI(tag)}]]`
+            return `[[${escapedTag}>>https://x.com/hashtag/${encodeURI(tag)}]]`
         })
         return text
     }, (
-        `テキスト中のTwitterハッシュタグに自動でリンクを張る
+        `テキスト中のX (Twitter)ハッシュタグに自動でリンクを張る
 
         ハッシュタグ「#初配信」でツイート
         ↓↓↓
-        ハッシュタグ「[[&#35;初配信>>https://twitter.com/hashtag/%E5%88%9D%E9%85%8D%E4%BF%A1]]」でツイート`.replace(/^[ \t]+/gm, '')
+        ハッシュタグ「[[&#35;初配信>>https://x.com/hashtag/%E5%88%9D%E9%85%8D%E4%BF%A1]]」でツイート`.replace(/^[ \t]+/gm, '')
     ))
 
     addSimpleProcessor('videolist', '動画サムネ付きリンク', (text) => {
