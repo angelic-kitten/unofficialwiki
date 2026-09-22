@@ -1747,7 +1747,14 @@ initMembersData () {
             chocosub:   {yt: 'UCp3tgHXw_HI0QMk1K8qh3gQ', bi: '', tw: '', name: 'ちょこSub', tag: '#癒月診療所', handle:'@YuzukiChoco_Sub'},
             //  gamer:      {name: "ホロライブゲーマーズ", handle:''},
             holo:       {yt: 'UCJFZiqLMntJufDCHc6bQixg', bi: '8982686', tw: '', name: 'ホロライブ公式', tag: '#ホロライブ', handle:'@hololive'},
-            journey:	{yt: 'UCrEgFGxfrKGyy17V9csSa5w',bi:'', tw:'', name:'Blue Journey', tag: '', handle:'@BlueJourney'}
+            journey:	{yt: 'UCrEgFGxfrKGyy17V9csSa5w',bi:'', tw:'', name:'Blue Journey', tag: '', handle:'@BlueJourney'},
+
+            mela:    	{yt: 'UC8eitCE9Z6EwUCs-VUi1blg',bi:'', tw:'achichi_mela', name:'熱千めら', tag: '', handle:'@AchichiMela'},
+            sopia:   	{yt: 'UCROQtXcp2loQEmvpe5rhJzQ',bi:'', tw:'sorashina_sopia', name:'宙科そぴあ', tag: '', handle:' @SorashinaSopia'},
+            tsuzuri: 	{yt: 'UCy9mgxB8pn2C4aNK_MPthDQ',bi:'', tw:'suzuna_tsuzuri', name:'鈴鳴つづり', tag: '', handle:'@SuzunaTsuzuri'},
+            kyoko:   	{yt: 'UCSjQDxud2HkAO2DVD3lwxmw',bi:'', tw:'hyakuto_kyoko', name:'百灯キョーコ', tag: '', handle:'@HyakutoKyoko'},
+            asobi:   	{yt: 'UCAHwWUotyS3l2qBetFDsjgQ',bi:'', tw:'ASOBIMAWARITAI', name:'アソビ★まわり隊！', tag: '', handle:'@hololive_ASOBIMAWARITAI'}
+
         }
     } else if (this.wikiId === 'siroyoutuber') {
         this.membersData = {
